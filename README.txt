@@ -1,7 +1,7 @@
 README
 -----------------------
 SETUP
-Create a new folder in C:.../pico-v1.5.1/pico-examples/___, e.g. "assignment"
+Create a new folder in C:.../pico-v1.5.1/pico-examples, e.g. "assignment"
 
 Pull the repo into C:.../pico-v1.5.1/pico-examples/(your folder name here)
 
