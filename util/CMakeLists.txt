@@ -1,4 +1,5 @@
 if (NOT PICO_NO_HARDWARE)
     add_subdirectory(test_util)
     add_subdirectory(motor_controller)
+    add_subdirectory(wheel_encoder)
 endif ()
