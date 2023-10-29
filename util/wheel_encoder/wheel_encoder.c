@@ -9,9 +9,15 @@
 #include "hardware/pwm.h"
 #include "stdio.h"
 
-#define WHEEL_CIRCUM 6.5
-#define DISTANCE_STATE 6.5/40
+// To get Wheel Circumference 2piR = 3.25*pi*2 = 20.420
+//
+#define WHEEL_CIRCUM 20.4
+#define DISTANCE_STATE 20.4/20.0
+#define R_WHEEL_ENCODER 13
 
+
+// Motor Controller code to be remvoed after driver end
+// 
 #define CLK_CYCLE_NO 62500  
 
 #define LEFT_MOTOR 20
@@ -22,14 +28,11 @@
 #define R_REVERSE_PIN 2
 #define R_CLOCKWISE_PIN 3
 
-#define R_WHEEL_ENCODER 13
-
-
 volatile int l_triggered = 0;
 volatile int r_triggered = 0;
 
 uint64_t start_time = 0;
-uint64_t end_time = 0;
+uint64_t prev_time = 0;
 
 void initialize_gpio_pins()
 {
@@ -97,22 +100,29 @@ float get_wheel_triggered(int num_triggered)
     return num_triggered;
 }
 
-void calculate_speed(uint gpio, uint32_t events) 
+float get_dst(float start_time, float prev_time)
 {
-    if(events == GPIO_IRQ_EDGE_RISE)
+    float elapsed_time =  start_time - prev_time;
+    float time_secs = elapsed_time / 1000000;
+    float speed = DISTANCE_STATE/time_secs;
+    printf("Time Elapsed: %.2f\n",time_secs);
+    printf("Distance Travelled: %.2fcm\n", DISTANCE_STATE * r_triggered);
+    printf("Current Speed :%.2f/s\n",speed);
+
+    return speed;
+}
+void wheel_callback(uint gpio, uint32_t events) 
+{
+
+    r_triggered +=1;
+    // Once a previous timing exists
+    //
+    if(prev_time)
     {
         start_time = time_us_64();
-        r_triggered +=1;
+        get_dst(start_time,prev_time);
     }
-    else
-    {
-        end_time = time_us_64();
-        float elapsed_time =  end_time - start_time;
-        float time_secs = elapsed_time / 1000000;
-        printf("Time Elapsed: %.2f\n",time_secs);
-        printf("Speed :%.2f/s\n",DISTANCE_STATE/time_secs);
-    }
-
+    prev_time = time_us_64();
 }
 
 void stop_motors(uint *l_slice_num,uint *r_slice_num)
@@ -128,7 +138,7 @@ void update_speed(uint *slice_num,enum pwm_chan channel, float duty_cycle)
 
 void enable_wheel_encode()
 {
-    gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &calculate_speed);
+    gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE , true, &wheel_callback);
 // gpio_set_irq_enabled_with_callback(L_ENCODER, GPIO_IRQ_EDGE_RISE, true, &count_triggered);
 }
 /*GPIO_IRQ_LEVEL_HIGH GPIO_IRQ_LEVEL_LOW*/

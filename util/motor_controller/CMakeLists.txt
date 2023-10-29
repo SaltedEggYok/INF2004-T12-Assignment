@@ -6,7 +6,7 @@ motor_controller.c
 target_link_libraries(motor_controller pico_stdlib)
 target_link_libraries(motor_controller pico_stdlib hardware_pwm)
 target_link_libraries(motor_controller pico_stdlib hardware_adc)
-target_link_libraries(motor_controller pico_stdlib hardware_rtc)
+target_link_libraries(motor_controller pico_stdlib hardware_rtc) 
 
 pico_enable_stdio_usb(motor_controller 1)
 pico_enable_stdio_uart(motor_controller 0)
