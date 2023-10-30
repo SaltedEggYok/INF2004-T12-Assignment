@@ -4,7 +4,7 @@ magnetometer.c
 
 # pull in common dependencies
 target_link_libraries(magnetometer pico_stdlib)
-target_link_libraries(magnetometer pico_stdlib hardware_i2c)
+target_link_libraries(magnetometer hardware_i2c)
 
 pico_enable_stdio_usb(magnetometer 1)
 pico_enable_stdio_uart(magnetometer 0)

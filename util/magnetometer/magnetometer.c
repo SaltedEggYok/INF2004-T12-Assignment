@@ -1,14 +1,17 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include <stdio.h>
+#include <math.h>
 
 #define I2C_PORT i2c0
 
 #define ACC_ADDRESS 0x19
 #define MAG_ADDRESS 0x1E
 
+// #define MAG_SENSITIVITY 0.67
+
 #define CTRL_REG1_A 0x20
-#define STATUS_REG_A 0x27
+
 #define OUT_X_L_A 0x28
 #define OUT_X_H_A 0x29
 #define OUT_Y_L_A 0x2A
@@ -32,6 +35,9 @@ int16_t bias_x = 0;
 int16_t bias_y = 0;
 int16_t bias_z = 0;
 
+volatile bool timeoutReceived = false;
+
+
 void initI2C() {
     i2c_init(I2C_PORT, 400000);
     gpio_set_function(PIN_SDA, GPIO_FUNC_I2C);
@@ -52,7 +58,7 @@ uint8_t readRegister(uint8_t address, uint8_t reg) {
 }
 
 void configureAccelerometer() {
-    writeRegister(ACC_ADDRESS, CTRL_REG1_A, STATUS_REG_A);
+    writeRegister(ACC_ADDRESS, CTRL_REG1_A, 0x47);
 }
 
 void readAccelerometerData(int16_t* x, int16_t* y, int16_t* z) {
@@ -69,6 +75,13 @@ void readMagnetometerData(int16_t* x, int16_t* y, int16_t* z) {
     *x = (int16_t)((readRegister(MAG_ADDRESS, OUT_X_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_X_L_M));
     *y = (int16_t)((readRegister(MAG_ADDRESS, OUT_Y_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_Y_L_M));
     *z = (int16_t)((readRegister(MAG_ADDRESS, OUT_Z_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_Z_L_M));
+
+    if ((*x == -16192 && *y == -16192 && *z == -16192) || 
+        (*x == 16448 && *y == 16448 && *z == 16448) || 
+        (*x == -32640 && *y == -32640 && *z == -32640) || 
+        (*x == 0 && *y == 0 && *z == 0)) {
+        timeoutReceived = true;
+    }
 }
 
 void calibrateAccelerometer() {
@@ -100,6 +113,21 @@ void calculateAcceleration(int16_t x, int16_t y, int16_t z) {
     printf("Acceleration: (X = %.2f m/s^2, Y = %.2f m/s^2, Z = %.2f m/s^2)\n", acc_x, acc_y, acc_z);
 }
 
+// Magnetic Field formula : raw data x magnetic cross-axis sensitivity
+// void convertMagDataToUT(int16_t* x, int16_t* y, int16_t* z) {
+//     *x = (int16_t)(*x / MAG_SENSITIVITY);
+//     *y = (int16_t)(*y / MAG_SENSITIVITY);
+//     *z = (int16_t)(*z / MAG_SENSITIVITY);
+// }
+
+double getCompassBearing(int16_t x, int16_t y) {
+    double angle = atan2((double)y, (double)x);
+    if (angle < 0) {
+        angle += 2 * M_PI;
+    }
+    return (angle * 180.0) / M_PI;
+}
+
 int main() {
     stdio_init_all();
     initI2C();
@@ -111,12 +139,22 @@ int main() {
         int16_t x_acc, y_acc, z_acc;
         int16_t x_mag, y_mag, z_mag;
 
-        readAccelerometerData(&x_acc, &y_acc, &z_acc);
-        readMagnetometerData(&x_mag, &y_mag, &z_mag);
+        if(!timeoutReceived) {
+            readAccelerometerData(&x_acc, &y_acc, &z_acc);
+            readMagnetometerData(&x_mag, &y_mag, &z_mag);
+            // convertMagDataToUT(&x_mag, &y_mag, &z_mag);
+            calculateAcceleration(x_acc, y_acc, z_acc);
+            // printf("Accelerometer Data: (X = %d, Y = %d, Z = %d)\n", x_acc, y_acc, z_acc);
+            printf("Magnetometer Data: (X = %d, Y = %d, Z = %d)\n", x_mag, y_mag, z_mag);
 
-        calculateAcceleration(x_acc, y_acc, z_acc);
-        // printf("Accelerometer Data: (X = %d, Y = %d, Z = %d)\n", x_acc, y_acc, z_acc);
-        printf("Magnetometer Data: (X = %d, Y = %d, Z = %d)\n", x_mag, y_mag, z_mag);
+            double compass_bearing = getCompassBearing(x_mag, y_mag);
+            printf("Compass Bearing: %.2f degrees\n", compass_bearing);
+        
+        }
+        else {
+            printf("Magnetometer read timed out.\n");
+            timeoutReceived = false;
+        }
 
         sleep_ms(500);
     }
