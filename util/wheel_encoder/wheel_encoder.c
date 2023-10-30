@@ -105,7 +105,7 @@ float get_dst(float start_time, float prev_time)
     float elapsed_time =  start_time - prev_time;
     float time_secs = elapsed_time / 1000000;
     float speed = DISTANCE_STATE/time_secs;
-    printf("Time Elapsed: %.2f\n",time_secs);
+    printf("Time Elapsed: %.2fs\n",time_secs);
     printf("Distance Travelled: %.2fcm\n", DISTANCE_STATE * r_triggered);
     printf("Current Speed :%.2f/s\n",speed);
 
