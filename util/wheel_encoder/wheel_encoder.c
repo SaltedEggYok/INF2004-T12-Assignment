@@ -20,13 +20,13 @@
 // 
 #define CLK_CYCLE_NO 62500  
 
-#define LEFT_MOTOR 20
-#define L_REVERSE_PIN 10
-#define L_CLOCKWISE_PIN 11
+#define LEFT_MOTOR 21
+#define L_REVERSE_PIN 2
+#define L_CLOCKWISE_PIN 3
 
-#define RIGHT_MOTOR 21
-#define R_REVERSE_PIN 2
-#define R_CLOCKWISE_PIN 3
+#define RIGHT_MOTOR 20
+#define R_REVERSE_PIN 10
+#define R_CLOCKWISE_PIN 11
 
 volatile int l_triggered = 0;
 volatile int r_triggered = 0;
@@ -161,11 +161,11 @@ int main() {
     move_forward();
     while(1)
     {
-        update_speed(&r_slice_num,PWM_CHAN_A,0.9);
+        update_speed(&r_slice_num,PWM_CHAN_B,0.9);
         sleep_ms(5000);
-        update_speed(&r_slice_num,PWM_CHAN_A,0.2);
+        update_speed(&r_slice_num,PWM_CHAN_B,0.2);
         sleep_ms(5000);
-        update_speed(&r_slice_num,PWM_CHAN_A,0.5);
+        update_speed(&r_slice_num,PWM_CHAN_B,0.5);
     }
 }
 
