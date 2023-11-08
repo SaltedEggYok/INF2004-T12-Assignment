@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 // Pico libraries
-#include "pico/types.h"
+#include "pico/types.h" // Timers
 #include "pico/stdlib.h"
 #include "pico/stdio.h"
 
@@ -93,7 +93,6 @@ void INFRARED_scanning()
             infraFlag = false;
             sleep_us(100);             
             charStartEndCheck[arrayVar] = time_us_32() / 1000; 
-            //printf("Black bar\n");
             arrayVar += 1;                                  
         }
     }
@@ -104,7 +103,6 @@ void INFRARED_scanning()
             infraFlag = true;
             sleep_us(100); 
             charStartEndCheck[arrayVar] = time_us_32() / 1000; 
-            //printf("White bar");
             arrayVar += 1;
         }
     }
@@ -120,28 +118,17 @@ bool INFRARED_readyToReturnChar()
     else
         return false;
 }
-const char *INFRARED_returnChar()
-{
-    int tempCount = 0;
-    int tempCountStar = 0;
-    for (int i = 0; finalString[i] != '\0'; ++i)
-    {
-        if (finalString[i] != '*')
-        {
-            finalString[tempCount] = finalString[i];
-            tempCount++;
-        }
-        if (finalString[i] == '*')
-        {
-            tempCountStar++;
-        }
-        if (tempCountStar == 2)
-        {
-            finalString[tempCount] = '\0';
+const char *INFRARED_returnChar() {
+    int writeIndex = 0;
+    for (int readIndex = 0; finalString[readIndex] != '\0'; ++readIndex) {
+        if (finalString[readIndex] != '*') {
+            finalString[writeIndex++] = finalString[readIndex];
         }
     }
+    finalString[writeIndex] = '\0'; // Null-terminate the string
     return finalString;
 }
+
 void INFRARED_resetForNewString()
 {
     countStar = 0;                    // Reset count star
@@ -301,3 +288,4 @@ int main() {
     }
     return 0;
 }
+
