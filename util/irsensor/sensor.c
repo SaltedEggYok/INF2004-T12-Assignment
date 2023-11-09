@@ -1,31 +1,25 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-// Pico libraries
-#include "pico/types.h" // Timers
 #include "pico/stdlib.h"
 #include "pico/stdio.h"
 
-#define GPIO_PIN_INFRARED_IN1 26
+#define GPIO_PIN_IN1 26
 
 volatile bool infraFlag = true;
-volatile bool readyToStartBarcodeState = false;
+volatile bool startScanningBarcodeState = false;
 volatile int arrayVar = 0;
 volatile int charStartEndCheck[9];
 volatile int timeChanges[9];
-volatile int startReading = 0;
-int varcharStartEndStar[9]; 
-volatile int countStar = 0; 
-volatile int compareQ = 0; 
+int varcharStartEndAsterisk[9]; 
+volatile int countAsterisk = 0; 
 char varCharASCII = '~';      
 char finalString[22];          
-char sanitizedFinalString[20]; 
 const int TIMEOUT = 1200;      
-bool arrayStarNotMatch = true; 
+bool arrayAsteriskNotMatch = true; 
 
 // Mapping
-const int charStartEndStar[9] = {0, 1, 0, 0, 1, 0, 1, 0, 0};
+const int charStartEndAsterisk[9] = {0, 1, 0, 0, 1, 0, 1, 0, 0};
 const int charSpace[9] = {0, 1, 1, 0, 0, 0, 1, 0, 0};
 const int letterA[9] = {1, 0, 0, 0, 0, 1, 0, 0, 1};
 const int letterB[9] = {0, 0, 1, 0, 0, 1, 0, 0, 1};
@@ -54,7 +48,7 @@ const int letterX[9] = {0, 1, 0, 0, 1, 0, 0, 0, 1};
 const int letterY[9] = {1, 1, 0, 0, 1, 0, 0, 0, 0};
 const int letterZ[9] = {0, 1, 1, 0, 1, 0, 0, 0, 0};
 
-int compareArray(int a[], const int b[])
+int matchArray(int a[], const int b[])
 {
     int i;
     for (i = 0; i < 9; i++)
@@ -65,28 +59,28 @@ int compareArray(int a[], const int b[])
     return 0; // If array equal, return 0
 }
 
-void INFRARED_init(void)
+void init(void)
 {
     printf("[Encoder] Init start \n");
 
     // Initialization
-    gpio_init(GPIO_PIN_INFRARED_IN1);
-    gpio_set_dir(GPIO_PIN_INFRARED_IN1, GPIO_IN); // S1 in
+    gpio_init(GPIO_PIN_IN1);
+    gpio_set_dir(GPIO_PIN_IN1, GPIO_IN); // S1 in
 
     printf("[Encoder] Init done \n");
 }
 
-int readyToStartBarcode()
+int startScanningBarcode()
 {
-    if (gpio_get(GPIO_PIN_INFRARED_IN1) == 0)
+    if (gpio_get(GPIO_PIN_IN1) == 0)
     {
-        readyToStartBarcodeState = true;
+        startScanningBarcodeState = true;
         return 1; // For integration into main
     };
 }
-void INFRARED_scanning()
+void scanning()
 {
-    if (gpio_get(GPIO_PIN_INFRARED_IN1) == 1) // BLACK BAR
+    if (gpio_get(GPIO_PIN_IN1) == 1) // BLACK BAR
     {
         if (infraFlag == true)
         {
@@ -108,9 +102,9 @@ void INFRARED_scanning()
     }
 }
 
-bool INFRARED_readyToReturnChar()
+bool isBarcodeComplete()
 {
-    if (countStar >= 2)
+    if (countAsterisk >= 2)
     {
         // Return star to not found
         return true;
@@ -118,7 +112,7 @@ bool INFRARED_readyToReturnChar()
     else
         return false;
 }
-const char *INFRARED_returnChar() {
+const char *returnChar() {
     int writeIndex = 0;
     for (int readIndex = 0; finalString[readIndex] != '\0'; ++readIndex) {
         if (finalString[readIndex] != '*') {
@@ -129,17 +123,16 @@ const char *INFRARED_returnChar() {
     return finalString;
 }
 
-void INFRARED_resetForNewString()
+void resetForNewString()
 {
-    countStar = 0;                    // Reset count star
+    countAsterisk = 0;                    // Reset count star
     varCharASCII = '~';               // Reset variable
-    arrayStarNotMatch = true;         // Set back star as not found
+    arrayAsteriskNotMatch = true;         // Set back star as not found
     strcpy(finalString, "");          // Clear contents of string
-    strcpy(sanitizedFinalString, ""); // Clear contents of cleaned string
-    readyToStartBarcodeState = false; // Exit barcode state
+    startScanningBarcodeState = false; // Exit barcode state
 }
 
-void INFRARED_decodeCharTree() {
+void decodeChar() {
     const int* patterns[] = { letterA, letterB, letterC, letterD, letterE, letterF, letterG,
                               letterH, letterI, letterJ, letterK, letterL, letterM, letterN,
                               letterO, letterP, letterQ, letterR, letterS, letterT, letterU,
@@ -150,30 +143,30 @@ void INFRARED_decodeCharTree() {
     varCharASCII = '\0'; // Reset the current character
 
     for (int i = 0; i < numPatterns; ++i) {
-        if (compareArray(varcharStartEndStar, patterns[i]) == 0) {
+        if (matchArray(varcharStartEndAsterisk, patterns[i]) == 0) {
             varCharASCII = chars[i];
             break; // Break the loop once a match is found
         }
     }
-    if (varCharASCII != '\0' && !(varCharASCII == '*' && arrayStarNotMatch)) {
+    if (varCharASCII != '\0' && !(varCharASCII == '*' && arrayAsteriskNotMatch)) {
         strncat(finalString, &varCharASCII, 1);
     }
 
-    arrayStarNotMatch = (varCharASCII == '*');
+    arrayAsteriskNotMatch = (varCharASCII == '*');
 }
 
-bool INFRARED_oneCharRead()
+bool oneCharRead()
 {
     return (arrayVar == 10);
 }
-void INFRARED_sortingTimings()
+void decodeThickThinBar()
 {
     for (int i = 0; i < 9; i++)
     {
         timeChanges[i] = charStartEndCheck[i + 1] - charStartEndCheck[i];
         if (timeChanges[i] > TIMEOUT)
         {
-            INFRARED_resetForNewString();
+            resetForNewString();
             break;
         }
     }
@@ -214,39 +207,39 @@ void INFRARED_sortingTimings()
         {
             if (i == h1i || i == h2i || i == h3i)
             {
-                varcharStartEndStar[i] = 1;
+                varcharStartEndAsterisk[i] = 1;
             }
             else
             {
-                varcharStartEndStar[i] = 0;
+                varcharStartEndAsterisk[i] = 0;
             }
         }
         else
         {
             if (i == h1i || i == h2i || i == h3i)
             {
-                varcharStartEndStar[i] = 1;
+                varcharStartEndAsterisk[i] = 1;
             }
             else
             {
-                varcharStartEndStar[i] = 0;
+                varcharStartEndAsterisk[i] = 0;
             }
         }
     }
-    if (compareArray(varcharStartEndStar, charStartEndStar) == 0)
+    if (matchArray(varcharStartEndAsterisk, charStartEndAsterisk) == 0)
     {
-        arrayStarNotMatch = false; // If star is found, change bool
+        arrayAsteriskNotMatch = false; // If star is found, change bool
         if (varCharASCII != '*')
         {
             varCharASCII = '*'; // Prevent looping in case of slow reading
-            if (countStar < 2)
+            if (countAsterisk < 2)
             {
-                countStar++;
+                countAsterisk++;
             }
         }
     }
 
-    if (arrayStarNotMatch)
+    if (arrayAsteriskNotMatch)
     {
         arrayVar = 9; 
         for (int i = 0; i < 9; i++)
@@ -260,30 +253,30 @@ void INFRARED_sortingTimings()
         arrayVar = 0;
     }
 
-    INFRARED_decodeCharTree(); // Decode char & add to finalString based on array of timings
+    decodeChar(); // Decode char & add to finalString based on array of timings
 }
 
 
 int main() {
     stdio_init_all(); // Initialize standard I/O
-    INFRARED_init(); // Initialize infrared sensor
+    init(); // Initialize infrared sensor
 
     while (true) {
         tight_loop_contents(); // Function to keep CPU active
 
-        if (readyToStartBarcode()) { // Check if ready to start barcode scanning
-            while (!INFRARED_readyToReturnChar()) { // Keep scanning until a character is ready to return
-                INFRARED_scanning(); // Perform scanning operation
+        if (startScanningBarcode()) { // Check if ready to start barcode scanning
+            while (!isBarcodeComplete()) { // Keep scanning until a character is ready to return
+                scanning(); // Perform scanning operation
 
-                if (INFRARED_oneCharRead()) { // Check if one character is read
-                    INFRARED_sortingTimings(); // Process the timings to decode the character
+                if (oneCharRead()) { // Check if one character is read
+                    decodeThickThinBar(); // Process the timings to decode the character
                 }
             }
 
-            const char* decodedString = INFRARED_returnChar(); // Get the decoded barcode string
+            const char* decodedString = returnChar(); // Get the decoded barcode string
             printf("Decoded Barcode: %s\n", decodedString); // Print or handle the decoded string
 
-            INFRARED_resetForNewString(); 
+            resetForNewString(); 
         }
     }
     return 0;
