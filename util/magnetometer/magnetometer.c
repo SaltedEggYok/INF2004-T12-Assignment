@@ -1,42 +1,13 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
-#include <stdio.h>
-#include <math.h>
 
-#define I2C_PORT i2c0
-
-#define ACC_ADDRESS 0x19
-#define MAG_ADDRESS 0x1E
-
-// #define MAG_SENSITIVITY 0.67
-
-#define CTRL_REG1_A 0x20
-
-#define OUT_X_L_A 0x28
-#define OUT_X_H_A 0x29
-#define OUT_Y_L_A 0x2A
-#define OUT_Y_H_A 0x2B
-#define OUT_Z_L_A 0x2C
-#define OUT_Z_H_A 0x2D
-
-#define CRA_REG_M 0x00
-#define MR_REG_M 0x02
-#define OUT_X_H_M 0x03
-#define OUT_X_L_M 0x04
-#define OUT_Z_H_M 0x05
-#define OUT_Z_L_M 0x06
-#define OUT_Y_H_M 0x07
-#define OUT_Y_L_M 0x08
-
-#define PIN_SDA 0
-#define PIN_SCL 1
+#include "magnetometer.h"
 
 int16_t bias_x = 0;
 int16_t bias_y = 0;
 int16_t bias_z = 0;
 
-volatile bool timeoutReceived = false;
-
+volatile bool magnetometerTimeoutReceived = false;
 
 void initI2C() {
     i2c_init(I2C_PORT, 400000);
@@ -80,7 +51,7 @@ void readMagnetometerData(int16_t* x, int16_t* y, int16_t* z) {
         (*x == 16448 && *y == 16448 && *z == 16448) || 
         (*x == -32640 && *y == -32640 && *z == -32640) || 
         (*x == 0 && *y == 0 && *z == 0)) {
-        timeoutReceived = true;
+        magnetometerTimeoutReceived = true;
     }
 }
 
@@ -128,36 +99,41 @@ double getCompassBearing(int16_t x, int16_t y) {
     return (angle * 180.0) / M_PI;
 }
 
-int main() {
-    stdio_init_all();
+void initMagnetometer(){
     initI2C();
     configureAccelerometer();
     configureMagnetometer();
     calibrateAccelerometer();
-
-    while (1) {
-        int16_t x_acc, y_acc, z_acc;
-        int16_t x_mag, y_mag, z_mag;
-
-        if(!timeoutReceived) {
-            readAccelerometerData(&x_acc, &y_acc, &z_acc);
-            readMagnetometerData(&x_mag, &y_mag, &z_mag);
-            // convertMagDataToUT(&x_mag, &y_mag, &z_mag);
-            calculateAcceleration(x_acc, y_acc, z_acc);
-            // printf("Accelerometer Data: (X = %d, Y = %d, Z = %d)\n", x_acc, y_acc, z_acc);
-            printf("Magnetometer Data: (X = %d, Y = %d, Z = %d)\n", x_mag, y_mag, z_mag);
-
-            double compass_bearing = getCompassBearing(x_mag, y_mag);
-            printf("Compass Bearing: %.2f degrees\n", compass_bearing);
-        
-        }
-        else {
-            printf("Magnetometer read timed out.\n");
-            timeoutReceived = false;
-        }
-
-        sleep_ms(500);
-    }
-
-    return 0;
 }
+
+
+// int main() {
+//     stdio_init_all();
+//     initMagnetometer();
+
+//     while (1) {
+//         int16_t x_acc, y_acc, z_acc;
+//         int16_t x_mag, y_mag, z_mag;
+
+//         if(!magnetometerTimeoutReceived) {
+//             readAccelerometerData(&x_acc, &y_acc, &z_acc);
+//             readMagnetometerData(&x_mag, &y_mag, &z_mag);
+//             // convertMagDataToUT(&x_mag, &y_mag, &z_mag);
+//             calculateAcceleration(x_acc, y_acc, z_acc);
+//             // printf("Accelerometer Data: (X = %d, Y = %d, Z = %d)\n", x_acc, y_acc, z_acc);
+//             printf("Magnetometer Data: (X = %d, Y = %d, Z = %d)\n", x_mag, y_mag, z_mag);
+
+//             double compass_bearing = getCompassBearing(x_mag, y_mag);
+//             printf("Compass Bearing: %.2f degrees\n", compass_bearing);
+        
+//         }
+//         else {
+//             printf("Magnetometer read timed out.\n");
+//             magnetometerTimeoutReceived = false;
+//         }
+
+//         sleep_ms(500);
+//     }
+
+//     return 0;
+// }

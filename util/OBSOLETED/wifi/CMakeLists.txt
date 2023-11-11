@@ -1,0 +1,67 @@
+set(PROGRAM_NAME pico_w_webserver)
+
+#set(MAKE_FS_DATA_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/external/makefsdata)
+
+# if (NOT EXISTS ${MAKE_FS_DATA_SCRIPT})
+#         file(DOWNLOAD
+#                 https://raw.githubusercontent.com/krzmaz/lwip/e15654409d14a238aec5ed4bd5516063938c9345/src/apps/http/makefsdata/makefsdata
+#                 ${MAKE_FS_DATA_SCRIPT}
+#                 )
+# endif()
+# message("Running makefsdata script")
+# execute_process(COMMAND
+#         perl ${MAKE_FS_DATA_SCRIPT}
+#         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+#         ECHO_OUTPUT_VARIABLE
+#         ECHO_ERROR_VARIABLE
+#         )
+#file(RENAME external/fsdata.c external/my_fsdata.c)
+
+# add_executable(${PROGRAM_NAME}
+#         main.cpp
+#         ssi.cpp
+#         cgi.cpp
+#         )
+
+add_executable(${PROGRAM_NAME}
+        testmain.c
+        )
+
+target_compile_definitions(${PROGRAM_NAME} PRIVATE
+        WIFI_SSID=\"${WIFI_SSID}\"
+        WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+        PING_USE_SOCKETS=1
+        )
+#        NO_SYS=0            # don't want NO_SYS (generally this would be in your lwipopts.h)
+#        LWIP_SOCKET=1       # we need the socket API (generally this would be in your lwipopts.h)
+target_include_directories(${PROGRAM_NAME} PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+        )
+# target_link_libraries(${PROGRAM_NAME}
+#         pico_cyw43_arch_lwip_threadsafe_background
+#         #pico_cyw43_arch_lwip_sys_freertos
+#         pico_stdlib
+#         #pico_lwip_iperf
+#         #FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
+#         pico_lwip_http
+#         hardware_adc
+#         )
+# target_link_libraries(${PROGRAM_NAME}
+#         pico_cyw43_arch_lwip_threadsafe_background
+#         pico_lwip_http
+#         pico_stdlib
+#         hardware_adc
+#         )
+target_link_libraries(${PROGRAM_NAME}
+        pico_cyw43_arch_lwip_threadsafe_background
+        pico_cyw43_arch_lwip_sys_freertos
+        pico_stdlib
+        pico_lwip_iperf
+        FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
+)
+
+pico_enable_stdio_usb(${PROGRAM_NAME} TRUE)
+pico_enable_stdio_uart(${PROGRAM_NAME} TRUE)
+#suppress_pico_sdk_warnings()
+
+pico_add_extra_outputs(${PROGRAM_NAME})

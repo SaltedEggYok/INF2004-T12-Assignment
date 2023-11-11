@@ -1,0 +1,2 @@
+in wifi : picow_tcp_server, wifi is still hardcoded, unable to find out why i cant use WIFI_SSID, WIFI_PASSWORD
+	printf returns <YOUR SSID> <YOUR PASSWORD>, printing in the lab ping file i was able to get the values

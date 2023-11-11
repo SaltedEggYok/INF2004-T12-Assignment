@@ -1,10 +1,7 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
 #include "pico/stdlib.h"
 #include "pico/stdio.h"
 
-#define GPIO_PIN_IN1 26
+#include "sensor.h"
 
 volatile bool infraFlag = true;
 volatile bool startScanningBarcodeState = false;
@@ -59,7 +56,7 @@ int matchArray(int a[], const int b[])
     return 0; // If array equal, return 0
 }
 
-void init(void)
+void initSensor(void)
 {
     printf("[Encoder] Init start \n");
 
@@ -76,8 +73,12 @@ int startScanningBarcode()
     {
         startScanningBarcodeState = true;
         return 1; // For integration into main
-    };
+    }
+
+    // If not ready to scan, return 0
+    return 0;
 }
+
 void scanning()
 {
     if (gpio_get(GPIO_PIN_IN1) == 1) // BLACK BAR
@@ -257,28 +258,28 @@ void decodeThickThinBar()
 }
 
 
-int main() {
-    stdio_init_all(); // Initialize standard I/O
-    init(); // Initialize infrared sensor
+// int main() {
+//     stdio_init_all(); // Initialize standard I/O
+//     initSensor(); // Initialize infrared sensor
 
-    while (true) {
-        tight_loop_contents(); // Function to keep CPU active
+//     while (true) {
+//         tight_loop_contents(); // Function to keep CPU active
 
-        if (startScanningBarcode()) { // Check if ready to start barcode scanning
-            while (!isBarcodeComplete()) { // Keep scanning until a character is ready to return
-                scanning(); // Perform scanning operation
+//         if (startScanningBarcode()) { // Check if ready to start barcode scanning
+//             while (!isBarcodeComplete()) { // Keep scanning until a character is ready to return
+//                 scanning(); // Perform scanning operation
 
-                if (oneCharRead()) { // Check if one character is read
-                    decodeThickThinBar(); // Process the timings to decode the character
-                }
-            }
+//                 if (oneCharRead()) { // Check if one character is read
+//                     decodeThickThinBar(); // Process the timings to decode the character
+//                 }
+//             }
 
-            const char* decodedString = returnChar(); // Get the decoded barcode string
-            printf("Decoded Barcode: %s\n", decodedString); // Print or handle the decoded string
+//             const char* decodedString = returnChar(); // Get the decoded barcode string
+//             printf("Decoded Barcode: %s\n", decodedString); // Print or handle the decoded string
 
-            resetForNewString(); 
-        }
-    }
-    return 0;
-}
+//             resetForNewString(); 
+//         }
+//     }
+//     return 0;
+// }
 

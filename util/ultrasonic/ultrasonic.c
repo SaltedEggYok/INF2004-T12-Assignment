@@ -1,17 +1,19 @@
 #include "pico/stdlib.h"
-#include <stdio.h>
 #include "hardware/gpio.h"
 #include "hardware/timer.h"
+
+#include "ultrasonic.h"
 
 const uint trigPin = 0; // GP0
 const uint echoPin = 1; // GP1
 
-const int timeout = 26100; // Timeout in microseconds (100ms)
 
 volatile absolute_time_t startTime;
 volatile absolute_time_t endTime;
+
+const int timeout = 26100; // Timeout in microseconds (100ms)
 volatile bool echoReceived = false;
-volatile bool timeoutReceived = false;
+volatile bool ultrasonicTimeoutReceived = false;
 
 void setupUltrasonicPins() {
     gpio_init(trigPin);
@@ -40,7 +42,7 @@ void echoHandler(uint gpio, uint32_t events) {
 uint64_t getPulse() {    
     while (!echoReceived) {
         if (absolute_time_diff_us(startTime, endTime) > timeout){
-            timeoutReceived = true;
+            ultrasonicTimeoutReceived = true;
         }
         tight_loop_contents();
     }
@@ -54,25 +56,30 @@ uint64_t getCm() {
     return getPulse() / 58; // Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
 }
 
-int main() {
-  stdio_init_all();
-  setupUltrasonicPins();
-
-  // Setup echo pin interrupt
-  gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echoHandler);
-
-  while (1) {
-    uint64_t distance_cm = getCm();
-
-    if (!timeoutReceived) {
-      printf("Distance: %llu (cm)\n", distance_cm);
-    } else {
-      printf("Timeout reached.\n");
-      timeoutReceived = false;
-    }
-
-    sleep_ms(500);
-  }
-
-  return 0;
+void initUltrasonic(){
+    setupUltrasonicPins();
+    gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echoHandler);
 }
+
+// int main() {
+//   stdio_init_all();
+//   //setupUltrasonicPins();
+
+//   // Setup echo pin interrupt
+//   //gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echoHandler);
+
+//   while (1) {
+//         uint64_t distance_cm = getCm();
+
+//         if (!ultrasonicTimeoutReceived) {
+//             printf("Distance: %llu (cm)\n", distance_cm);
+//         } else {
+//             printf("Timeout reached.\n");
+//             ultrasonicTimeoutReceived = false;
+//         }
+
+//         sleep_ms(500);
+//   }
+
+//   return 0;
+// }
