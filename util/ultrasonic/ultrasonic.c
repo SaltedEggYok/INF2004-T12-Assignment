@@ -39,7 +39,7 @@ void echoHandler(uint gpio, uint32_t events) {
     }
 }
 
-uint64_t getPulse() {    
+float getPulse() {    
     while (!echoReceived) {
         if (absolute_time_diff_us(startTime, endTime) > timeout){
             ultrasonicTimeoutReceived = true;
@@ -47,13 +47,13 @@ uint64_t getPulse() {
         tight_loop_contents();
     }
 
-    return absolute_time_diff_us(startTime, endTime);
+    return (float)absolute_time_diff_us(startTime, endTime);
 }
 
-uint64_t getCm() {
+float getCm() {
     echoReceived = false;
     triggerUltrasonic();
-    return getPulse() / 58; // Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
+    return getPulse() / 58.0f; // Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
 }
 
 void initUltrasonic(){
@@ -69,10 +69,10 @@ void initUltrasonic(){
 //   //gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echoHandler);
 
 //   while (1) {
-//         uint64_t distance_cm = getCm();
+//         float distance_cm = getCm();
 
 //         if (!ultrasonicTimeoutReceived) {
-//             printf("Distance: %llu (cm)\n", distance_cm);
+//             printf("Distance: %.2f (cm)\n", distance_cm);
 //         } else {
 //             printf("Timeout reached.\n");
 //             ultrasonicTimeoutReceived = false;

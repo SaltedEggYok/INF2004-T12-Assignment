@@ -4,6 +4,6 @@
 #include <stdint.h>
 
 
-uint64_t getCm();
+float getCm();
 
 void initUltrasonic();
