@@ -7,6 +7,7 @@ if (TARGET tinyusb_device)
                 util/irsensor/sensor.c 
                 util/magnetometer/magnetometer.c 
                 util/map/map.c 
+                util/pid_controller/pid_controller.c
                 util/motor_controller/motor_controller.c 
                 util/ultrasonic/ultrasonic.c 
                 util/wheel_encoder/wheel_encoder.c 
@@ -26,6 +27,7 @@ if (TARGET tinyusb_device)
                 util/ultrasonic
                 util/wheel_encoder
                 util/wifi
+                uill/pid_controller
         )
         # pull in common dependencies and additional pwm hardware support
         target_link_libraries(${PROGRAM_NAME}
@@ -67,7 +69,8 @@ if (TARGET tinyusb_device)
                 ${CMAKE_CURRENT_LIST_DIR}/util/motor_controller
                 ${CMAKE_CURRENT_LIST_DIR}/util/ultrasonic
                 ${CMAKE_CURRENT_LIST_DIR}/util/wheel_encoder
-                ${CMAKE_CURRENT_LIST_DIR}/util/wifi								
+                ${CMAKE_CURRENT_LIST_DIR}/util/wifi	
+                ${CMAKE_CURRENT_LIST_DIR}/util/pid_controller							
                 ${PICO_LWIP_CONTRIB_PATH}/apps/ping
 #                main INTERFACE ${CMAKE_CURRENT_LIST_DIR}
         )

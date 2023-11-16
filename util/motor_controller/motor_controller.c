@@ -10,6 +10,8 @@
 
 uint8_t l_slice_num, r_slice_num, reverse_turn;
 
+// Initalize all Motor Controller pins
+//
 void initialize_gpio_pins()
 {
     gpio_init(L_REVERSE_PIN);
