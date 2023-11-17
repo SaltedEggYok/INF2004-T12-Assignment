@@ -52,7 +52,9 @@ static void vTemperatureTask(void* pvParameters)
 static void vMovingTask(void* pvParameters)
 {
     printf("Hi");
-}// init everything
+}
+
+// init everything
 void initAll()
 {
 
@@ -172,13 +174,7 @@ int main()
     //     return -1;
     // }
     //init everything
-    initSensor();
-    initMagnetometer();
-    initMap();
-    initMotorController();
-    initUltrasonic();
-    initWheelEncoder();
-    initWifi();
+    initAll();
     
 
     xTaskCreate(vTemperatureTask,"Temp_Task",configMINIMAL_STACK_SIZE,NULL,8,NULL);
@@ -187,7 +183,8 @@ int main()
     while (true) 
     {
 
-        
+        updateBehaviour();
+        updateMovement();
         // if(gpio_get(BTN_PIN))
         // {
         //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);

@@ -264,20 +264,20 @@ void initWifi(bool *wifiEnabled){
 
     if (cyw43_arch_init()) {
         printf("failed to initialise\n");
-        wifiEnabled = false;
+        *wifiEnabled = false;
         return;
     }
 
     cyw43_arch_enable_sta_mode();
 
     if (attemptConnection()){ //1 - error, 0 - ok
-        wifiEnabled = false;
+        *wifiEnabled = false;
         return;
     }
 
     run_tcp_server_test();
 
-    wifiEnabled = true;
+    *wifiEnabled = true;
     return;
 }
 
