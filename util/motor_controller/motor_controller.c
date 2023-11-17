@@ -108,8 +108,8 @@ void stop_motors(uint8_t *l_slice_num,uint8_t *r_slice_num)
 //
 void turn_left(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
 {
-    update_speed(l_slice_num,PWM_CHAN_A,0.3);
-    update_speed(r_slice_num,PWM_CHAN_B,0.8);
+    // update_speed(l_slice_num,PWM_CHAN_A,0.3);
+    // update_speed(r_slice_num,PWM_CHAN_B,0.8);
     if(!reverse_turn)
     {
         gpio_put(L_CLOCKWISE_PIN, 0);
@@ -130,8 +130,8 @@ void turn_left(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
 //
 void turn_right(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
 {
-    update_speed(l_slice_num,PWM_CHAN_A,0.8);
-    update_speed(r_slice_num,PWM_CHAN_B,0.3);
+    // update_speed(l_slice_num,PWM_CHAN_A,0.8);
+    // update_speed(r_slice_num,PWM_CHAN_B,0.3);
     if(!reverse_turn)
     {
         gpio_put(L_CLOCKWISE_PIN, 1);
@@ -146,6 +146,7 @@ void turn_right(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
         gpio_put(R_CLOCKWISE_PIN, 1);
         gpio_put(R_REVERSE_PIN, 0);
     }
+    
     // Checks if a reverse turn is specified, if not specified, forward turn right else, reverse turn right 
     //
     // if(!reverse_turn)
@@ -164,7 +165,8 @@ void turn_right(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
     // }
 }
 
-void initMotorController(){
+void initMotorController()
+{
     // Initialize all gpio pins
     //
     initialize_gpio_pins();  

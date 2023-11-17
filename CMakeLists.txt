@@ -7,11 +7,11 @@ if (TARGET tinyusb_device)
                 util/irsensor/sensor.c 
                 util/magnetometer/magnetometer.c 
                 util/map/map.c 
-                util/pid_controller/pid_controller.c
                 util/motor_controller/motor_controller.c 
                 util/ultrasonic/ultrasonic.c 
                 util/wheel_encoder/wheel_encoder.c 
                 util/wifi/wifi.c
+                util/pid_controller/pid_controller.c
                 )
         
         #add .h files
@@ -41,6 +41,7 @@ if (TARGET tinyusb_device)
                 hardware_timer
                 hardware_i2c
                 main_lib
+                FreeRTOS-Kernel-Heap4 
                 )
         
         # target_link_libraries(main 
