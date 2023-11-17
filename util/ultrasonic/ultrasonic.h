@@ -5,8 +5,8 @@
 #include "common.h"
 
 
-#define trigPin 0
-#define echoPin 1
+#define ULTRASONIC_TRIG_PIN 0
+#define ULTRASONIC_ECHO_PIN 1
 float getCm();
 
 void initUltrasonic();

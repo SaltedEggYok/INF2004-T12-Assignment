@@ -10,18 +10,6 @@
 
 #include "wheel_encoder.h"
 
-volatile int l_triggered = 0;
-volatile int r_triggered = 0;
-
-uint64_t r_start_time = 0;
-uint64_t r_prev_time = 0;
-
-uint64_t l_start_time = 0;
-uint64_t l_prev_time = 0;
-
-static float l_speed = 0.0;
-static float r_speed = 0.0;
-
 // Get the speed value of either wheel
 //
 float get_dst(float start_time, float prev_time,float dir_triggered)

@@ -61,15 +61,15 @@ void initSensor(void)
     printf("[Encoder] Init start \n");
 
     // Initialization
-    gpio_init(GPIO_PIN_IN1);
-    gpio_set_dir(GPIO_PIN_IN1, GPIO_IN); // S1 in
+    gpio_init(BARCODE_SENSOR);
+    gpio_set_dir(BARCODE_SENSOR, GPIO_IN); // S1 in
 
     printf("[Encoder] Init done \n");
 }
 
 int startScanningBarcode()
 {
-    if (gpio_get(GPIO_PIN_IN1) == 0)
+    if (gpio_get(BARCODE_SENSOR) == 0)
     {
         startScanningBarcodeState = true;
         return 1; // For integration into main
@@ -81,7 +81,7 @@ int startScanningBarcode()
 
 void scanning()
 {
-    if (gpio_get(GPIO_PIN_IN1) == 1) // BLACK BAR
+    if (gpio_get(BARCODE_SENSOR) == 1) // BLACK BAR
     {
         if (infraFlag == true)
         {
@@ -259,11 +259,11 @@ void decodeThickThinBar()
 
 //pass by reference from main, to get sensor readings
 void getLeftSensor(bool* leftSensor){
-    *leftSensor = gpio_get(GPIO_PIN_LEFT_SENSOR);
+    *leftSensor = gpio_get(LEFT_IR_SENSOR);
 }
 
 void getRightSensor(bool* rightSensor){
-    *rightSensor = gpio_get(GPIO_PIN_LEFT_SENSOR);
+    *rightSensor = gpio_get(LEFT_IR_SENSOR);
 }
 
 // int main() {

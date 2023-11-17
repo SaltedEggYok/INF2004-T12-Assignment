@@ -179,6 +179,14 @@ int main()
 
     xTaskCreate(vTemperatureTask,"Temp_Task",configMINIMAL_STACK_SIZE,NULL,8,NULL);
     xTaskCreate(vMovingTask,"Moving_Task",configMINIMAL_STACK_SIZE,NULL,7,NULL);
+    gpio_set_irq_enabled_with_callback(L_WHEEL_ENCODER,GPIO_IRQ_EDGE_RISE,false,&main_callback);
+    gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER,GPIO_IRQ_EDGE_RISE,false,&main_callback);
+    gpio_set_irq_enabled_with_callback(LEFT_IR_SENSOR,GPIO_IRQ_EDGE_RISE,false,&main_callback);
+    gpio_set_irq_enabled_with_callback(RIGHT_IR_SENSOR,GPIO_IRQ_EDGE_RISE,false,&main_callback);
+    gpio_set_irq_enabled_with_callback(BARCODE_SENSOR,GPIO_IRQ_EDGE_RISE,false,&main_callback);
+    gpio_set_irq_enabled_with_callback(ULTRASONIC_ECHO_PIN,GPIO_IRQ_EDGE_RISE,false,&main_callback);
+
+
     vTaskStartScheduler();
     while (true) 
     {
