@@ -48,7 +48,7 @@ float get_dst(float start_time, float prev_time,float dir_triggered)
 //
 void wheel_callback(unsigned int gpio, long unsigned int events) 
 {
-    if(gpio == 13)
+    if(gpio == R_WHEEL_ENCODER)
     {
         r_triggered +=1;
         // Once a previous timing exists
@@ -60,7 +60,7 @@ void wheel_callback(unsigned int gpio, long unsigned int events)
         }
         r_prev_time = time_us_64();
     }
-    if(gpio == 12)
+    if(gpio == L_WHEEL_ENCODER)
     {
         l_triggered +=1;
         // Once a previous timing exists
