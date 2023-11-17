@@ -37,6 +37,39 @@ bool direction = false;
 //for use with wiif.h
 bool wifiEnabled = false;
 
+//for use with wheel_encoder.h
+volatile int l_triggered = 0;
+volatile int r_triggered = 0;
+
+uint64_t r_start_time = 0;
+uint64_t r_prev_time = 0;
+
+uint64_t l_start_time = 0;
+uint64_t l_prev_time = 0;
+
+static float l_speed = 0.0;
+static float r_speed = 0.0;
+
+//for use with ultrasonic.h
+
+//const uint trigPin = 0; // GP0
+//const uint echoPin = 1; // GP1
+
+volatile absolute_time_t startTime_ultra;
+volatile absolute_time_t endTime_ultra;
+
+const int timeout = 26100; // Timeout in microseconds (100ms)
+volatile bool echoReceived = false;
+volatile bool ultrasonicTimeoutReceived = false;
+
+
+//for use with magnetometer.h
+int16_t bias_x = 0;
+int16_t bias_y = 0;
+int16_t bias_z = 0;
+
+volatile bool magnetometerTimeoutReceived = false;
+
 // #define CLK_CYCLE_NO 62500
 
 // // Setup 

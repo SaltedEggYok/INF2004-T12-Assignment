@@ -36,31 +36,31 @@ void reverse();
 
 void initMotorController(uint8_t *l_slice_num, uint8_t *r_slice_num, bool *direction);
 
-// safety
-#ifndef CLK_CYCLE_NO
-#define CLK_CYCLE_NO 62500
-#endif
+// // safety
+// #ifndef CLK_CYCLE_NO
+// #define CLK_CYCLE_NO 62500
+// #endif
 
-#ifndef LEFT_MOTOR
-#define LEFT_MOTOR 21
-#endif
+// #ifndef LEFT_MOTOR
+// #define LEFT_MOTOR 21
+// #endif
 
-#ifndef L_REVERSE_PIN
-#define L_REVERSE_PIN 2
-#endif
+// #ifndef L_REVERSE_PIN
+// #define L_REVERSE_PIN 2
+// #endif
 
-#ifndef L_CLOCKWISE_PIN
-#define L_CLOCKWISE_PIN 3
-#endif
+// #ifndef L_CLOCKWISE_PIN
+// #define L_CLOCKWISE_PIN 3
+// #endif
 
-#ifndef RIGHT_MOTOR
-#define RIGHT_MOTOR 20
-#endif
+// #ifndef RIGHT_MOTOR
+// #define RIGHT_MOTOR 20
+// #endif
 
-#ifndef R_REVERSE_PIN
-#define R_REVERSE_PIN 10
-#endif
+// #ifndef R_REVERSE_PIN
+// #define R_REVERSE_PIN 10
+// #endif
 
-#ifndef R_CLOCKWISE_PIN
-#define R_CLOCKWISE_PIN 11
-#endif
+// #ifndef R_CLOCKWISE_PIN
+// #define R_CLOCKWISE_PIN 11
+// #endif

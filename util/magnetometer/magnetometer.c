@@ -3,11 +3,11 @@
 
 #include "magnetometer.h"
 
-int16_t bias_x = 0;
-int16_t bias_y = 0;
-int16_t bias_z = 0;
+// int16_t bias_x = 0;
+// int16_t bias_y = 0;
+// int16_t bias_z = 0;
 
-volatile bool magnetometerTimeoutReceived = false;
+// volatile bool magnetometerTimeoutReceived = false;
 
 void initI2C() {
     i2c_init(I2C_PORT, 400000);
@@ -28,54 +28,56 @@ uint8_t readRegister(uint8_t address, uint8_t reg) {
     return data;
 }
 
-void configureAccelerometer() {
+void configureAccelerometer() 
+{
     writeRegister(ACC_ADDRESS, CTRL_REG1_A, 0x47);
 }
 
-void readAccelerometerData(int16_t* x, int16_t* y, int16_t* z) {
-    *x = (int16_t)((readRegister(ACC_ADDRESS, OUT_X_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_X_L_A)) - bias_x;
-    *y = (int16_t)((readRegister(ACC_ADDRESS, OUT_Y_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_Y_L_A)) - bias_y;
-    *z = (int16_t)((readRegister(ACC_ADDRESS, OUT_Z_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_Z_L_A)) - bias_z;
-}
+// void readAccelerometerData(int16_t* x, int16_t* y, int16_t* z) {
+//     *x = (int16_t)((readRegister(ACC_ADDRESS, OUT_X_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_X_L_A)) - bias_x;
+//     *y = (int16_t)((readRegister(ACC_ADDRESS, OUT_Y_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_Y_L_A)) - bias_y;
+//     *z = (int16_t)((readRegister(ACC_ADDRESS, OUT_Z_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_Z_L_A)) - bias_z;
+// }
 
 void configureMagnetometer() {
     writeRegister(MAG_ADDRESS, MR_REG_M, CRA_REG_M);
 }
 
-void readMagnetometerData(int16_t* x, int16_t* y, int16_t* z) {
-    *x = (int16_t)((readRegister(MAG_ADDRESS, OUT_X_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_X_L_M));
-    *y = (int16_t)((readRegister(MAG_ADDRESS, OUT_Y_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_Y_L_M));
-    *z = (int16_t)((readRegister(MAG_ADDRESS, OUT_Z_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_Z_L_M));
+// void readMagnetometerData(int16_t* x, int16_t* y, int16_t* z) {
+//     *x = (int16_t)((readRegister(MAG_ADDRESS, OUT_X_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_X_L_M));
+//     *y = (int16_t)((readRegister(MAG_ADDRESS, OUT_Y_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_Y_L_M));
+//     *z = (int16_t)((readRegister(MAG_ADDRESS, OUT_Z_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_Z_L_M));
 
-    if ((*x == -16192 && *y == -16192 && *z == -16192) || 
-        (*x == 16448 && *y == 16448 && *z == 16448) || 
-        (*x == -32640 && *y == -32640 && *z == -32640) || 
-        (*x == 0 && *y == 0 && *z == 0)) {
-        magnetometerTimeoutReceived = true;
-    }
-}
+//     if ((*x == -16192 && *y == -16192 && *z == -16192) || 
+//         (*x == 16448 && *y == 16448 && *z == 16448) || 
+//         (*x == -32640 && *y == -32640 && *z == -32640) || 
+//         (*x == 0 && *y == 0 && *z == 0)) {
+//         magnetometerTimeoutReceived = true;
+//     }
+// }
 
-void calibrateAccelerometer() {
-    const int numSamples = 100;  
-    int16_t x_accum = 0;
-    int16_t y_accum = 0;
-    int16_t z_accum = 0;
+// void calibrateAccelerometer() {
+//     const int numSamples = 100;  
+//     int16_t x_accum = 0;
+//     int16_t y_accum = 0;
+//     int16_t z_accum = 0;
 
-    for (int i = 0; i < numSamples; i++) {
-        int16_t x, y, z;
-        readAccelerometerData(&x, &y, &z);
-        x_accum += x;
-        y_accum += y;
-        z_accum += z;
-        sleep_ms(10);  
-    }
+//     for (int i = 0; i < numSamples; i++) {
+//         int16_t x, y, z;
+//         readAccelerometerData(&x, &y, &z);
+//         x_accum += x;
+//         y_accum += y;
+//         z_accum += z;
+//         sleep_ms(10);  
+//     }
 
-    bias_x = x_accum / numSamples;
-    bias_y = y_accum / numSamples;
-    bias_z = z_accum / numSamples;
-}
+//     bias_x = x_accum / numSamples;
+//     bias_y = y_accum / numSamples;
+//     bias_z = z_accum / numSamples;
+// }
 
-void calculateAcceleration(int16_t x, int16_t y, int16_t z) {
+void calculateAcceleration(int16_t x, int16_t y, int16_t z) 
+{
     double g = 9.81; // Standard gravity in m/s^2
     double acc_x = (double)x * (g / 16384.0);
     double acc_y = (double)y * (g / 16384.0);
@@ -101,9 +103,9 @@ double getCompassBearing(int16_t x, int16_t y) {
 
 void initMagnetometer(){
     initI2C();
-    configureAccelerometer();
-    configureMagnetometer();
-    calibrateAccelerometer();
+    //configureAccelerometer();
+    //configureMagnetometer();
+    //calibrateAccelerometer();
 }
 
 

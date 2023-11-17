@@ -7,6 +7,8 @@
 
 #define ULTRASONIC_TRIG_PIN 0
 #define ULTRASONIC_ECHO_PIN 1
+
 float getCm();
 
 void initUltrasonic();
+void triggerUltrasonic();

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "common.h"
+#include <stdint.h>
 
 #define I2C_PORT i2c0
 
@@ -29,13 +30,14 @@
 #define OUT_Y_H_M 0x07
 #define OUT_Y_L_M 0x08
 
-#define PIN_SDA 0
-#define PIN_SCL 1
+#define PIN_SDA 14
+#define PIN_SCL 15
 
 
 void readAccelerometerData(int16_t* x, int16_t* y, int16_t* z);
 void readMagnetometerData(int16_t* x, int16_t* y, int16_t* z);
 void calculateAcceleration(int16_t x, int16_t y, int16_t z);
 double getCompassBearing(int16_t x, int16_t y);
+uint8_t readRegister(uint8_t address, uint8_t reg);
 
 void initMagnetometer();

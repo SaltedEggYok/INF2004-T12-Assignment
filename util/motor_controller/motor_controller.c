@@ -109,7 +109,7 @@ void stop_motors(uint8_t *l_slice_num, uint8_t *r_slice_num)
 //
 void turn_left(uint8_t *l_slice_num, uint8_t *r_slice_num, bool direction)
 {
-    update_speed(l_slice_num, PWM_CHAN_A, 0.3);
+    update_speed(l_slice_num, PWM_CHAN_A, 0);
     update_speed(r_slice_num, PWM_CHAN_B, 0.8);
     if (direction)
     {
@@ -186,7 +186,9 @@ void initMotorController(uint8_t *l_slice_num, uint8_t *r_slice_num, bool *direc
     //
     *l_slice_num = get_slice_num(LEFT_MOTOR);
     *r_slice_num = get_slice_num(RIGHT_MOTOR);
-    *direction = false;
+    *direction = true;
+
+    enable_motors(l_slice_num, r_slice_num);
 }
 
 // int main()
