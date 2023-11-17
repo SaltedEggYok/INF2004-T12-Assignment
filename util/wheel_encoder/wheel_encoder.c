@@ -22,18 +22,24 @@ uint64_t l_prev_time = 0;
 static float l_speed = 0.0;
 static float r_speed = 0.0;
 
-uint8_t l_slice_num_wheel, r_slice_num_wheel;
-
-
 // Get the speed value of either wheel
 //
 float get_dst(float start_time, float prev_time,float dir_triggered)
 {
+    // Get the time between the current time and the prev time to get the time elapsed per edge rise
+    //
     float elapsed_time =  start_time - prev_time;
+    // Convert to seconds
+    //
     float time_secs = elapsed_time / 1000000;
+    // Get speed
+    //
     float speed = DISTANCE_STATE/time_secs;
+    // Get the distance Travelled
+    //
+    float distance_travelled = DISTANCE_STATE * dir_triggered;
     printf("Time Elapsed: %.2fs\n",time_secs);
-    printf("Distance Travelled: %.2fcm\n", DISTANCE_STATE * dir_triggered);
+    printf("Distance Travelled: %.2fcm\n", distance_travelled);
     printf("Current Speed :%.2f/s\n",speed);
 
     return speed;

@@ -7,6 +7,8 @@
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 #include "main_lib.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "util/irsensor/sensor.h"
 #include "util/map/map.h"
@@ -16,12 +18,9 @@
 #include "util/motor_controller/motor_controller.h"
 #include "util/wheel_encoder/wheel_encoder.h"
 
-
 // const uint BTN_PIN = 14;
-
 int main() {
     stdio_init_all();
-
     // gpio_set_dir(BTN_PIN, GPIO_IN);
     // gpio_set_pulls(BTN_PIN, true, false);
 
@@ -29,7 +28,6 @@ int main() {
     //     printf("Wi-Fi init failed.");
     //     return -1;
     // }
-
     //init everything
     initSensor();
     initMagnetometer();
@@ -38,8 +36,10 @@ int main() {
     initUltrasonic();
     initWheelEncoder();
     initWifi();
+    
 
-    while (true) {
+    while (true) 
+    {
         
 
         // if(gpio_get(BTN_PIN))
