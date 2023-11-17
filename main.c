@@ -18,6 +18,41 @@
 #include "util/motor_controller/motor_controller.h"
 #include "util/wheel_encoder/wheel_encoder.h"
 
+void main_callback(unsigned int gpio, long unsigned int events) 
+{
+    // Left Wheel Encoder
+    // 
+    if(gpio == L_WHEEL_ENCODER)
+    {
+        // get_dst(l_start_time,l_prev_time,l_triggered);
+    }
+    // Right Wheel Encoder
+    // 
+    else if(gpio == R_WHEEL_ENCODER)
+    {
+
+    }
+    // UltraSonic Sensor
+    //
+    else if(gpio == 1)
+    {
+
+    }
+    // IR sensor 1
+    //
+    else if(gpio == 26)
+    {
+
+    }
+}
+static void vTemperatureTask(void* pvParameters)
+{
+    printf("Hi");
+}
+static void vMovingTask(void* pvParameters)
+{
+    printf("Hi");
+}
 // const uint BTN_PIN = 14;
 int main() {
     stdio_init_all();
@@ -38,10 +73,13 @@ int main() {
     initWifi();
     
 
+    xTaskCreate(vTemperatureTask,"Temp_Task",configMINIMAL_STACK_SIZE,NULL,8,NULL);
+    xTaskCreate(vMovingTask,"Moving_Task",configMINIMAL_STACK_SIZE,NULL,7,NULL);
+    vTaskStartScheduler();
     while (true) 
     {
-        
 
+        
         // if(gpio_get(BTN_PIN))
         // {
         //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
