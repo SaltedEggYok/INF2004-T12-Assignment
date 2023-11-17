@@ -4,8 +4,8 @@
 
 #include "ultrasonic.h"
 
-const uint trigPin = 0; // GP0
-const uint echoPin = 1; // GP1
+// const uint trigPin = 0; // GP0
+// const uint echoPin = 1; // GP1
 
 
 volatile absolute_time_t startTime;
@@ -56,7 +56,8 @@ float getCm() {
     return getPulse() / 58.0f; // Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
 }
 
-void initUltrasonic(){
+void initUltrasonic()
+{
     setupUltrasonicPins();
     gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echoHandler);
 }

@@ -7,6 +7,8 @@
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 #include "main_lib.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "util/irsensor/sensor.h"
 #include "util/map/map.h"
@@ -16,7 +18,41 @@
 #include "util/motor_controller/motor_controller.h"
 #include "util/wheel_encoder/wheel_encoder.h"
 
-// init everything
+void main_callback(unsigned int gpio, long unsigned int events) 
+{
+    // Left Wheel Encoder
+    // 
+    if(gpio == L_WHEEL_ENCODER)
+    {
+        // get_dst(l_start_time,l_prev_time,l_triggered);
+    }
+    // Right Wheel Encoder
+    // 
+    else if(gpio == R_WHEEL_ENCODER)
+    {
+
+    }
+    // UltraSonic Sensor
+    //
+    else if(gpio == 1)
+    {
+
+    }
+    // IR sensor 1
+    //
+    else if(gpio == 26)
+    {
+
+    }
+}
+static void vTemperatureTask(void* pvParameters)
+{
+    printf("Hi");
+}
+static void vMovingTask(void* pvParameters)
+{
+    printf("Hi");
+}// init everything
 void initAll()
 {
 
@@ -128,7 +164,6 @@ void updateMovement()
 int main()
 {
     stdio_init_all();
-
     // gpio_set_dir(BTN_PIN, GPIO_IN);
     // gpio_set_pulls(BTN_PIN, true, false);
 
@@ -136,17 +171,23 @@ int main()
     //     printf("Wi-Fi init failed.");
     //     return -1;
     // }
+    //init everything
+    initSensor();
+    initMagnetometer();
+    initMap();
+    initMotorController();
+    initUltrasonic();
+    initWheelEncoder();
+    initWifi();
+    
 
-    // init everything
-    initAll();
-
-    // main loop
-    while (true)
+    xTaskCreate(vTemperatureTask,"Temp_Task",configMINIMAL_STACK_SIZE,NULL,8,NULL);
+    xTaskCreate(vMovingTask,"Moving_Task",configMINIMAL_STACK_SIZE,NULL,7,NULL);
+    vTaskStartScheduler();
+    while (true) 
     {
 
-        updateBehaviour();
-        updateMovement();
-
+        
         // if(gpio_get(BTN_PIN))
         // {
         //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
