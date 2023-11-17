@@ -43,17 +43,22 @@ float compute_pid(float target_spd, float curr_spd, float *integral, float *prev
     //
     float error = target_spd - curr_spd;
 
+    // Update the Integral
+    //
+    *integral += error;
     // Get derivative
     // 
     float derivative = error - *prev_error;
 
-    float pwm_signal = (Kp * error) + (Ki * *integral) + (Kd *  derivative); 
+    // Modified duty_cycle
+    //
+    float duty_cycle_response = (Kp * error) + (Ki * *integral) + (Kd *  derivative); 
 
     // Update the error
     //
     *prev_error = error;
 
-    return pwm_signal;
+    return duty_cycle_response;
 }
 
 // int main()
