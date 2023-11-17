@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "common.h"
 
 #define INITIAL_WIDTH 20
 #define INITIAL_HEIGHT 20

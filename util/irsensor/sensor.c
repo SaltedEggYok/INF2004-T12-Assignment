@@ -257,6 +257,14 @@ void decodeThickThinBar()
     decodeChar(); // Decode char & add to finalString based on array of timings
 }
 
+//pass by reference from main, to get sensor readings
+void getLeftSensor(bool* leftSensor){
+    *leftSensor = gpio_get(GPIO_PIN_LEFT_SENSOR);
+}
+
+void getRightSensor(bool* rightSensor){
+    *rightSensor = gpio_get(GPIO_PIN_LEFT_SENSOR);
+}
 
 // int main() {
 //     stdio_init_all(); // Initialize standard I/O

@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-
-#define GPIO_PIN_IN1 26
+#include "common.h"
 
 
 //functions 
@@ -17,3 +16,9 @@ const char *returnChar();
 void resetForNewString();
 
 void initSensor();
+
+//pass by reference from main, to get sensor readings
+//for normal map traversing line reading
+//will be called almost every frame
+void getLeftSensor(bool* leftSensor);
+void getRightSensor(bool* rightSensor);

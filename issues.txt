@@ -1,10 +1,13 @@
 ISSUES
-in wifi : picow_tcp_server, wifi is still hardcoded, unable to find out why i cant use WIFI_SSID, WIFI_PASSWORD
-	printf returns <YOUR SSID> <YOUR PASSWORD>, printing in the lab ping file i was able to get the values
+in wifi.c : 
+	ssid and password are still hardcoded, 
+	havent been able to find out why i cant use WIFI_SSID, WIFI_PASSWORD
+	printf returns <YOUR SSID> <YOUR PASSWORD>, 
+	printf in the lab code file i was able to get the exact values
 
 WARNINGS
-CYW43_LWIP redefined in wheel_encoder.c, motor_controller.c not sure why only those 2 
-files as well, as there should be multiple files calling for the same LWIP file, 
-need to continue monitoring 
+	CYW43_LWIP redefined in wheel_encoder.c, motor_controller.c not sure why only those 2 
+	files as well, as there should be multiple files calling for the same LWIP file, 
+	need to continue monitoring 
 
 	

@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include "common.h"
 
 #define I2C_PORT i2c0
 

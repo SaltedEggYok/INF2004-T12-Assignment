@@ -8,7 +8,7 @@
 
 #include "motor_controller.h"
 
-uint8_t l_slice_num, r_slice_num, reverse_turn;
+// uint8_t l_slice_num, r_slice_num, reverse_turn;
 
 // Initalize all Motor Controller pins
 //
@@ -23,11 +23,12 @@ void initialize_gpio_pins()
     gpio_set_dir(R_REVERSE_PIN, GPIO_OUT);
     gpio_set_dir(R_CLOCKWISE_PIN, GPIO_OUT);
 }
+
 // Update pwm parameters to set the speed of a specified motor by modifying the duty cycle
 //
-void update_speed(uint8_t *slice_num,enum pwm_chan channel, float duty_cycle)
+void update_speed(uint8_t *slice_num, enum pwm_chan channel, float duty_cycle)
 {
-    pwm_set_chan_level(*slice_num,channel,CLK_CYCLE_NO * duty_cycle);
+    pwm_set_chan_level(*slice_num, channel, CLK_CYCLE_NO * duty_cycle);
 }
 
 // Retrieves the slice number attached to a specific motor
@@ -41,17 +42,17 @@ uint8_t get_slice_num(int motor_no)
 
 // Starts up the motors with default pwm parameters
 //
-void enable_motors(uint8_t *l_slice_num,uint8_t *r_slice_num)
+void enable_motors(uint8_t *l_slice_num, uint8_t *r_slice_num)
 {
     // Allocate the gpio pins of the left and right motor to the pwm
     //
-    gpio_set_function(LEFT_MOTOR,GPIO_FUNC_PWM);   
-    gpio_set_function(RIGHT_MOTOR,GPIO_FUNC_PWM);
+    gpio_set_function(LEFT_MOTOR, GPIO_FUNC_PWM);
+    gpio_set_function(RIGHT_MOTOR, GPIO_FUNC_PWM);
 
     // Set the divider of the pwm clock
     //
-    pwm_set_clkdiv(*l_slice_num,100);
-    pwm_set_clkdiv(*r_slice_num,100);
+    pwm_set_clkdiv(*l_slice_num, 100);
+    pwm_set_clkdiv(*r_slice_num, 100);
 
     // Set the highest value for the pwm before the clock wraps around back to 0
     //
@@ -60,57 +61,57 @@ void enable_motors(uint8_t *l_slice_num,uint8_t *r_slice_num)
 
     // Set the default duty cycles of both PWM channels to be 50%
     //
-    pwm_set_chan_level(*l_slice_num,PWM_CHAN_A,CLK_CYCLE_NO * 0.5);
-    pwm_set_chan_level(*r_slice_num,PWM_CHAN_B,CLK_CYCLE_NO * 0.5);
+    pwm_set_chan_level(*l_slice_num, PWM_CHAN_A, CLK_CYCLE_NO * 0.5);
+    pwm_set_chan_level(*r_slice_num, PWM_CHAN_B, CLK_CYCLE_NO * 0.5);
 
     // Set the respective pwms to run
-    // 
-    pwm_set_enabled(*l_slice_num,true);
-    pwm_set_enabled(*r_slice_num,true);
+    //
+    pwm_set_enabled(*l_slice_num, true);
+    pwm_set_enabled(*r_slice_num, true);
 }
 
 // Enables the car to move forward
 //
 void move_forward()
 {
-    gpio_put(L_CLOCKWISE_PIN,1);
-    gpio_put(L_REVERSE_PIN,0);
-    gpio_put(R_CLOCKWISE_PIN,1);
-    gpio_put(R_REVERSE_PIN,0);
+    gpio_put(L_CLOCKWISE_PIN, 1);
+    gpio_put(L_REVERSE_PIN, 0);
+    gpio_put(R_CLOCKWISE_PIN, 1);
+    gpio_put(R_REVERSE_PIN, 0);
 }
 
 // Enables the car to reverse
 //
 void reverse()
-{   
-    gpio_put(L_CLOCKWISE_PIN,0);
-    gpio_put(L_REVERSE_PIN,1);
-    gpio_put(R_CLOCKWISE_PIN,0);
-    gpio_put(R_REVERSE_PIN,1);
+{
+    gpio_put(L_CLOCKWISE_PIN, 0);
+    gpio_put(L_REVERSE_PIN, 1);
+    gpio_put(R_CLOCKWISE_PIN, 0);
+    gpio_put(R_REVERSE_PIN, 1);
 }
 
 // Resets the speed back to default
 //
-void reset_speed(uint8_t *l_slice_num,uint8_t *r_slice_num)
+void reset_speed(uint8_t *l_slice_num, uint8_t *r_slice_num)
 {
-    update_speed(l_slice_num,PWM_CHAN_A,0.5);
-    update_speed(r_slice_num,PWM_CHAN_B,0.5);    
+    update_speed(l_slice_num, PWM_CHAN_A, 0.5);
+    update_speed(r_slice_num, PWM_CHAN_B, 0.5);
 }
 // Enables the car to stop
 //
-void stop_motors(uint8_t *l_slice_num,uint8_t *r_slice_num)
+void stop_motors(uint8_t *l_slice_num, uint8_t *r_slice_num)
 {
-    pwm_set_chan_level(*l_slice_num,PWM_CHAN_A,0);
-    pwm_set_chan_level(*r_slice_num,PWM_CHAN_B,0);
+    pwm_set_chan_level(*l_slice_num, PWM_CHAN_A, 0);
+    pwm_set_chan_level(*r_slice_num, PWM_CHAN_B, 0);
 }
 
 // Enables the car to make a left turn
 //
-void turn_left(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
+void turn_left(uint8_t *l_slice_num, uint8_t *r_slice_num, bool direction)
 {
-    update_speed(l_slice_num,PWM_CHAN_A,0.3);
-    update_speed(r_slice_num,PWM_CHAN_B,0.8);
-    if(!reverse_turn)
+    update_speed(l_slice_num, PWM_CHAN_A, 0.3);
+    update_speed(r_slice_num, PWM_CHAN_B, 0.8);
+    if (direction)
     {
         gpio_put(L_CLOCKWISE_PIN, 0);
         gpio_put(L_REVERSE_PIN, 1);
@@ -128,11 +129,11 @@ void turn_left(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
 
 // Enables the car to make a right turn
 //
-void turn_right(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
+void turn_right(uint8_t *l_slice_num, uint8_t *r_slice_num, bool direction)
 {
-    update_speed(l_slice_num,PWM_CHAN_A,0.8);
-    update_speed(r_slice_num,PWM_CHAN_B,0.3);
-    if(!reverse_turn)
+    update_speed(l_slice_num, PWM_CHAN_A, 0.8);
+    update_speed(r_slice_num, PWM_CHAN_B, 0.3);
+    if (direction)
     {
         gpio_put(L_CLOCKWISE_PIN, 1);
         gpio_put(L_REVERSE_PIN, 0);
@@ -142,11 +143,11 @@ void turn_right(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
     else
     {
         gpio_put(L_CLOCKWISE_PIN, 0);
-        gpio_put(L_REVERSE_PIN,1);
+        gpio_put(L_REVERSE_PIN, 1);
         gpio_put(R_CLOCKWISE_PIN, 1);
         gpio_put(R_REVERSE_PIN, 0);
     }
-    // Checks if a reverse turn is specified, if not specified, forward turn right else, reverse turn right 
+    // Checks if a reverse turn is specified, if not specified, forward turn right else, reverse turn right
     //
     // if(!reverse_turn)
     // {
@@ -164,19 +165,32 @@ void turn_right(uint8_t *l_slice_num,uint8_t *r_slice_num,uint8_t reverse_turn)
     // }
 }
 
-void initMotorController(){
+// NOTE: deprecated due to change to pass by reference
+//  void initMotorController(){
+//      // Initialize all gpio pins
+//      //
+//      initialize_gpio_pins();
+//      // Get the respective pwm slices
+//      //
+//      l_slice_num = get_slice_num(LEFT_MOTOR);
+//      r_slice_num = get_slice_num(RIGHT_MOTOR);
+//      reverse_turn = 0;
+//  }
+
+void initMotorController(uint8_t *l_slice_num, uint8_t *r_slice_num, bool *direction)
+{
     // Initialize all gpio pins
     //
-    initialize_gpio_pins();  
+    initialize_gpio_pins();
     // Get the respective pwm slices
     //
-    l_slice_num = get_slice_num(LEFT_MOTOR);
-    r_slice_num = get_slice_num(RIGHT_MOTOR);  
-    reverse_turn = 0;
+    *l_slice_num = get_slice_num(LEFT_MOTOR);
+    *r_slice_num = get_slice_num(RIGHT_MOTOR);
+    *direction = false;
 }
 
-// int main() 
-// {  
+// int main()
+// {
 //     // Initalize stdio
 //     //
 //     stdio_init_all();

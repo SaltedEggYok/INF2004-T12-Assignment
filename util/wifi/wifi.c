@@ -259,22 +259,26 @@ int attemptConnection(){
     return 0;
 }
 
-int initWifi(){
+// changes the state of a boolean passed in, main.h will use to to allow or disallow wifi
+void initWifi(bool *wifiEnabled){
 
     if (cyw43_arch_init()) {
         printf("failed to initialise\n");
-        return 1;
+        wifiEnabled = false;
+        return;
     }
 
     cyw43_arch_enable_sta_mode();
 
     if (attemptConnection()){ //1 - error, 0 - ok
-        return 1;
+        wifiEnabled = false;
+        return;
     }
 
     run_tcp_server_test();
 
-    return 0;
+    wifiEnabled = true;
+    return;
 }
 
 // int main() {

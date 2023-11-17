@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "common.h"
 
 #define TCP_PORT 4242
 #define DEBUG_printf printf
@@ -22,4 +23,4 @@ typedef struct TCP_SERVER_T_ {
     int run_count;
 } TCP_SERVER_T;
 
-int initWifi();
+void initWifi(bool *wifiEnabled);
