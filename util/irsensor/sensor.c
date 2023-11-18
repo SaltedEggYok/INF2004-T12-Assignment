@@ -247,13 +247,16 @@ bool oneCharRead()
 /* Processes the timings to identify thick and thin bars and decode the character */
 void decodeThickThinBar()
 {
+// Check if a complete pattern has been read. If not, exit the function early.
     if (!patternComplete) {
         return;
     }
 
+// Calculate the time differences between transitions and store them in the timeChanges array.
     for (int i = 0; i < 9; i++)
     {
         timeChanges[i] = charStartEndCheck[i + 1] - charStartEndCheck[i];
+        // If any time difference exceeds the TIMEOUT threshold, reset for a new barcode string.
         if (timeChanges[i] > TIMEOUT)
         {
             resetForNewString();
@@ -261,69 +264,87 @@ void decodeThickThinBar()
         }
     }
 
-    int h1 = INT32_MIN;
-    int h2 = INT32_MIN; 
-    int h3 = INT32_MIN;
-    int h1i, h2i, h3i = 0;
+    // Initialize variables to store the indices and values of the three longest times,
+    // which correspond to the thick bars in a barcode pattern.
+    int h1 = INT32_MIN; // Highest time value
+    int h2 = INT32_MIN; // Second highest time value
+    int h3 = INT32_MIN; // Third highest time value
+    int h1i, h2i, h3i = 0; // Indices of the highest times
+
+    // Loop through the timeChanges array to find the three longest times.
     for (int i = 0; i < 9; i++)
     {
+        // If the current time is greater than the largest recorded time.
         if (timeChanges[i] > h1)
+        // Shift the second and third highest times and their indices down.
         {
             h3i = h2i;
             h2i = h1i;
             h1i = i;
 
+        // Record the new highest time and its index.
             h3 = h2;
             h2 = h1;
             h1 = timeChanges[i];
         }
+
+        // If the current time is between the largest and second largest recorded times.
         else if (timeChanges[i] > h2)
         {
+        // Shift the third highest time and its index down.
             h3i = h2i;
             h2i = i;
 
+        // Record the new second highest time.
             h3 = h2;
             h2 = timeChanges[i];
         }
+
+        // If the current time is between the second and third largest recorded times.
         else if (timeChanges[i] > h3)
         {
+            // Record the new third highest time and its index.
             h3i = i;
             h3 = timeChanges[i];
         }
     }
+    // Set the positions of the thick bars in the varcharStartEndAsterisk array based on the indices of the longest times.
     for (int i = 0; i < 9; i++)
     {  
             if (i == h1i || i == h2i || i == h3i)
             {
-                varcharStartEndAsterisk[i] = 1;
+                varcharStartEndAsterisk[i] = 1; //Thick bar
             }
             else
             {
-                varcharStartEndAsterisk[i] = 0;
+                varcharStartEndAsterisk[i] = 0; //Thin bar
             }  
     }
 
-    //printf("Full Pattern: ");
+    // Print the complete pattern of thick and thin bars to the console.
     for (int i = 0; i < 9; i++)
     {
         printf("%d ", varcharStartEndAsterisk[i]);
     }
     printf("\n");
 
+    // Check if the detected pattern matches the start/end asterisk pattern.
     if (matchArray(varcharStartEndAsterisk, charStartEndAsterisk) == 0)
     {
         printf("Star deteceted Forward \n");
         if (varCharASCII != '*')
         {
             varCharASCII = '*'; 
+             // Increase the asterisk count, ensuring it doesn't exceed two.
             if (countAsterisk < 2)
             {
                 countAsterisk++;
             }
         }
     }
-    else if (matchArray(varcharStartEndAsterisk, reverseCharStartEnd) == 0)
 
+    // Check if the detected pattern matches the reversed start/end asterisk pattern.
+    else if (matchArray(varcharStartEndAsterisk, reverseCharStartEnd) == 0)
     {
                 printf("Star deteceted Reversed \n");
         if (varCharASCII != '*')
@@ -335,22 +356,27 @@ void decodeThickThinBar()
             }
         }
     }
+
+    // If an asterisk pattern was not matched, prepare to shift the read pattern by one position.
     if (arrayAsteriskisNotMatch)
     {
-        arrayVar = 9; 
+        // Shift the timing checks array by one position to the left.
+        arrayVar = 9; // Set to read the next bar
         for (int i = 0; i < 9; i++)
         {
             charStartEndCheck[i] = charStartEndCheck[i + 1];
         }
-        charStartEndCheck[9] = 0;
+        charStartEndCheck[9] = 0; // Clear the last position for the new read
     }
     else
     {
+        // Reset the arrayVar to start reading a new character.
         arrayVar = 0;
     }
 
     decodeChar(); // Decode char & add to finalString based on array of timings
 
+    // Reset variables for the next read cycle.
     arrayVar = 0;
     memset(charStartEndCheck, 0, sizeof(charStartEndCheck)); // Clear the array
     patternComplete = false;
