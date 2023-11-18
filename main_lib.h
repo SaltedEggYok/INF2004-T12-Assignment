@@ -50,6 +50,13 @@ uint64_t l_prev_time = 0;
 static float l_speed = 0.0;
 static float r_speed = 0.0;
 
+static float duty_cycle = 0.5;
+static float updated_duty_cycle = 0.0;
+
+float integral = 0.0;
+float prev_error = 0.0;
+
+
 //for use with ultrasonic.h
 
 //const uint trigPin = 0; // GP0
@@ -60,7 +67,7 @@ volatile absolute_time_t endTime_ultra;
 
 const int timeout = 26100; // Timeout in microseconds (100ms)
 volatile bool echoReceived = false;
-volatile bool ultrasonicTimeoutReceived = false;
+bool ultrasonicTimeoutReceived = false;
 
 
 //for use with magnetometer.h
@@ -88,4 +95,3 @@ volatile bool magnetometerTimeoutReceived = false;
 // #define RIGHT_MOTOR 20
 // #define R_REVERSE_PIN 10
 // #define R_CLOCKWISE_PIN 11
-

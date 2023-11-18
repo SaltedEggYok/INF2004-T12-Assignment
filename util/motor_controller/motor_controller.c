@@ -109,8 +109,8 @@ void stop_motors(uint8_t *l_slice_num, uint8_t *r_slice_num)
 //
 void turn_left(uint8_t *l_slice_num, uint8_t *r_slice_num, bool direction)
 {
-    update_speed(l_slice_num, PWM_CHAN_A, 0);
-    update_speed(r_slice_num, PWM_CHAN_B, 0.8);
+    // update_speed(l_slice_num, PWM_CHAN_A, 0);
+    // update_speed(r_slice_num, PWM_CHAN_B, 0.8);
     if (direction)
     {
         gpio_put(L_CLOCKWISE_PIN, 0);
@@ -131,8 +131,8 @@ void turn_left(uint8_t *l_slice_num, uint8_t *r_slice_num, bool direction)
 //
 void turn_right(uint8_t *l_slice_num, uint8_t *r_slice_num, bool direction)
 {
-    update_speed(l_slice_num, PWM_CHAN_A, 0.8);
-    update_speed(r_slice_num, PWM_CHAN_B, 0.3);
+    // update_speed(l_slice_num, PWM_CHAN_A, 0.8);
+    // update_speed(r_slice_num, PWM_CHAN_B, 0.3);
     if (direction)
     {
         gpio_put(L_CLOCKWISE_PIN, 1);

@@ -1,7 +1,6 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/timer.h"
-
 #include "ultrasonic.h"
 
 // const uint trigPin = 0; // GP0
@@ -14,7 +13,8 @@
 // volatile bool echoReceived = false;
 // volatile bool ultrasonicTimeoutReceived = false;
 
-void setupUltrasonicPins() {
+void setupUltrasonicPins() 
+{
     gpio_init(ULTRASONIC_TRIG_PIN);
     gpio_init(ULTRASONIC_ECHO_PIN);
     gpio_set_dir(ULTRASONIC_TRIG_PIN, GPIO_OUT);
@@ -27,7 +27,28 @@ void triggerUltrasonic() {
     gpio_put(ULTRASONIC_TRIG_PIN, 0);
 }
 
-// void echoHandler(uint gpio, uint32_t events) {
+float getPulse(volatile bool *echoReceived, absolute_time_t startTime_ultra, absolute_time_t endTime_ultra,int timeout,bool *ultraSonicTimeoutReceived) 
+{    
+    while (! *echoReceived) 
+    {
+        if (absolute_time_diff_us(startTime_ultra, endTime_ultra) > timeout)
+        {
+            *ultraSonicTimeoutReceived = true;
+        }
+    }
+
+    return (float)absolute_time_diff_us(startTime_ultra, endTime_ultra);
+}
+
+float getCm(volatile bool *echoReceived, absolute_time_t startTime_ultra, absolute_time_t endTime_ultra,int timeout,bool *ultraSonicTimeoutReceived) 
+{ 
+    *echoReceived = false;
+    triggerUltrasonic();// Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
+    return getPulse(echoReceived,startTime_ultra,endTime_ultra,timeout,ultraSonicTimeoutReceived) / 58.0f; // Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
+}
+
+// void echoHandler(uint gpio, uint32_t events) 
+//  {
 //     if (gpio == ULTRASONIC_ECHO_PIN) {
 //         if (gpio_get(ULTRASONIC_ECHO_PIN) == 1) {
 //             startTime = get_absolute_time();
