@@ -53,7 +53,6 @@ void main_callback(unsigned int gpio, long unsigned int events)
             r_start_time = time_us_64();
             r_speed = get_dst(r_start_time,r_prev_time,r_triggered);
             printf("Right Wheel Speed: %.2f/s\n",r_speed);
-
         }
         r_prev_time = time_us_64();
 
@@ -280,7 +279,11 @@ int main()
     move_forward();
     while (true) 
     {
- 
+        updated_duty_cycle = compute_pid(r_speed,l_speed,&integral,&prev_error);
+        // printf("Modifier: %f\n",updated_duty_cycle);
+        // duty_cycle += updated_duty_cycle;
+        // printf("Modified Duty Cycle : %f\n",duty_cycle);
+        // update_speed(&leftSliceNum,PWM_CHAN_A,duty_cycle);  
         //printf("curr Move State: %d\n", currMoveState);
         //printf("curr Mode: %d\n", currMode);
     
@@ -289,11 +292,7 @@ int main()
 
         // double distance_cm = getCm(&echoReceived,startTime_ultra,endTime_ultra,timeout,&ultrasonicTimeoutReceived);
 
-        updated_duty_cycle = compute_pid(r_speed,l_speed,&integral,&prev_error);
-        printf("Modifier: %f\n",updated_duty_cycle);
-        duty_cycle += updated_duty_cycle;
-        printf("Modified Duty Cycle : %f\n",duty_cycle);
-        update_speed(&leftSliceNum,PWM_CHAN_A,duty_cycle);  
+
         // if (!ultrasonicTimeoutReceived) {
         //     printf("Distance from nearest object: %.2f (cm)\n", distance_cm);
         // } else {
@@ -335,6 +334,6 @@ int main()
         // }
 
         // pseudo code
-        sleep_ms(150); // 60 fps
+        sleep_ms(500); // 60 fps
     }
 }

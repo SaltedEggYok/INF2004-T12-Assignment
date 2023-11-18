@@ -15,7 +15,7 @@
 #define RIGHT_IR_SENSOR 13 //for right sensor
 
 //for motor_controller.h********************************
-#define CLK_CYCLE_NO 62500
+#define CLK_CYCLE_NO 12500
 
 // Setup 
 // EN A - 21

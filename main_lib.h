@@ -50,7 +50,7 @@ uint64_t l_prev_time = 0;
 static float l_speed = 0.0;
 static float r_speed = 0.0;
 
-static float duty_cycle = 0.6;
+static float duty_cycle = 0.8;
 static float updated_duty_cycle = 0.0;
 
 float integral = 0.0;

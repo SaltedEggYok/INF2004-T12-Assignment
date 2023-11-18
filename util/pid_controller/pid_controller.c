@@ -35,12 +35,16 @@ float compute_pid(float target_spd, float curr_spd, float *integral, float *prev
 {
     // Initialize PID gains
     //
-    float Kp = 1; 
-    float Ki = 0.3; 
-    float Kd = 0.1; 
+    // float Kp = 1; 
+    // float Ki = 0.3; 
+    // float Kd = 0.1; 
+    float Kp = 0.05; 
+    float Ki = 0.98; 
+    float Kd = 0.0525; 
+
     // Get the current error
     //
-    float error = (target_spd - curr_spd)/1000;
+    float error = (target_spd - curr_spd)/750;
     printf("Error: %f\n",error);
 
     // Update the Integral
