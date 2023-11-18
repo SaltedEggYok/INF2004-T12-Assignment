@@ -326,7 +326,7 @@ int main()
             magnetometerTimeoutReceived = false;
         }
 
-
+    
         // if(gpio_get(BTN_PIN))
         // {
         //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);

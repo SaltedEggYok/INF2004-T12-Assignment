@@ -64,6 +64,12 @@ void initSensor(void)
     gpio_init(BARCODE_SENSOR);
     gpio_set_dir(BARCODE_SENSOR, GPIO_IN); // S1 in
 
+    gpio_init(LEFT_IR_SENSOR);
+    gpio_set_dir(LEFT_IR_SENSOR, GPIO_IN); // S2 in
+
+    gpio_init(RIGHT_IR_SENSOR);
+    gpio_set_dir(RIGHT_IR_SENSOR, GPIO_IN); // S3 in
+
     printf("[Encoder] Init done \n");
 }
 
@@ -263,7 +269,7 @@ void getLeftSensor(bool* leftSensor){
 }
 
 void getRightSensor(bool* rightSensor){
-    *rightSensor = gpio_get(LEFT_IR_SENSOR);
+    *rightSensor = gpio_get(RIGHT_IR_SENSOR);
 }
 
 // int main() {

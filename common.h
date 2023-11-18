@@ -11,8 +11,8 @@
 
 //for sensor.h*****************************************
 #define BARCODE_SENSOR 26 //for barcode
-#define LEFT_IR_SENSOR 27 //for left sensor
-#define RIGHT_IR_SENSOR 28 //for right sensor
+#define LEFT_IR_SENSOR 12 //for left sensor
+#define RIGHT_IR_SENSOR 13 //for right sensor
 
 //for motor_controller.h********************************
 #define CLK_CYCLE_NO 62500
@@ -55,6 +55,14 @@
 
 // static float l_speed = 0.0;
 // static float r_speed = 0.0;
+
+// To get Wheel Circumference 2piR = 3.25*pi*2 = 20.420
+//
+#define WHEEL_CIRCUM 20.4
+#define DISTANCE_STATE 20.4/20.0
+
+#define L_WHEEL_ENCODER 18
+#define R_WHEEL_ENCODER 19
 
 // ---------------------------------------------------------------
 
@@ -102,13 +110,13 @@ Used Pins
 5 - left motor clockwise
 6 - right motor
 7 - left motor
-12 - left wheel encoder
-13 - right wheel encoder
+12 - left sensor
+13 - right sensor
 14 - SDA, I2C1
 15 - SCL, I2C1
+18 - left wheel encoder
+19 - right wheel encoder
 26 - barcode sensor UNUSED
-27 - left sensor
-28 - right sensor
 */
 
 // Configuration Parameters

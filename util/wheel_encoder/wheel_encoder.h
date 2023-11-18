@@ -3,13 +3,6 @@
 #include <stdio.h>
 #include "common.h"
 
-// To get Wheel Circumference 2piR = 3.25*pi*2 = 20.420
-//
-#define WHEEL_CIRCUM 20.4
-#define DISTANCE_STATE 20.4/20.0
-
-#define L_WHEEL_ENCODER 12
-#define R_WHEEL_ENCODER 13
 
 
 // Motor Controller code to be remvoed after driver end
