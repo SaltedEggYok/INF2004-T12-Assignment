@@ -11,9 +11,6 @@
 #include "wheel_encoder.h"
 #include "common.h"
 
-
-
-
 // volatile int l_triggered = 0;
 // volatile int r_triggered = 0;
 
@@ -28,7 +25,7 @@
 
 // Get the speed value of either wheel
 //
-float get_dst(float start_time, float prev_time,float dir_triggered,float *dist)
+float get_dst(float start_time, float prev_time,float dir_triggered)
 {
     // Get the time between the current time and the prev time to get the time elapsed per edge rise
     //
@@ -41,10 +38,10 @@ float get_dst(float start_time, float prev_time,float dir_triggered,float *dist)
     float speed = DISTANCE_STATE/time_secs;
     // Get the distance Travelled
     //
-    *dist = DISTANCE_STATE * dir_triggered;
+    float distance_travelled = DISTANCE_STATE * dir_triggered;
     printf("Time Elapsed: %.2fs\n",time_secs);
-    printf("Distance Travelled: %.2fcm\n", *dist);
-    printf("Current Speed :%.2f/s\n",speed);
+    printf("Distance Travelled: %.2fcm\n", distance_travelled);
+
     return speed;
 }
 // ISR which detects which wheel encoder was triggered and updates speed variable

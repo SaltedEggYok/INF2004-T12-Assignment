@@ -3,14 +3,10 @@
 
 #include "magnetometer.h"
 
-// int16_t bias_x = 0;
-// int16_t bias_y = 0;
-// int16_t bias_z = 0;
-
-// volatile bool magnetometerTimeoutReceived = false;
 int16_t bias_x = 0;
 int16_t bias_y = 0;
 int16_t bias_z = 0;
+
 volatile bool magnetometerTimeoutReceived = false;
 
 void initI2C() {
@@ -43,8 +39,7 @@ void readAccelerometerData(int16_t* x, int16_t* y, int16_t* z) {
     *z = (int16_t)((readRegister(ACC_ADDRESS, OUT_Z_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_Z_L_A)) - bias_z;
 }
 
-void configureMagnetometer() 
-{
+void configureMagnetometer() {
     writeRegister(MAG_ADDRESS, MR_REG_M, CRA_REG_M);
 }
 
@@ -67,8 +62,7 @@ void calibrateAccelerometer() {
     int16_t y_accum = 0;
     int16_t z_accum = 0;
 
-    for (int i = 0; i < numSamples; i++) 
-    {
+    for (int i = 0; i < numSamples; i++) {
         int16_t x, y, z;
         readAccelerometerData(&x, &y, &z);
         x_accum += x;
@@ -84,12 +78,12 @@ void calibrateAccelerometer() {
 
 void calculateAcceleration(int16_t x, int16_t y, int16_t z) 
 {
-       double g = 9.81; // Standard gravity in m/s^2
+    double g = 9.81; // Standard gravity in m/s^2
     double acc_x = (double)x * (g / 16384.0);
     double acc_y = (double)y * (g / 16384.0);
     double acc_z = (double)z * (g / 16384.0);
 
-    printf("Acceleration: (X = %.2f m/s^2, Y = %.2f m/s^2, Z = %.2f m/s^2)\n", acc_x, acc_y, acc_z);
+    // printf("Acceleration: (X = %.2f m/s^2, Y = %.2f m/s^2, Z = %.2f m/s^2)\n", acc_x, acc_y, acc_z);
 }
 
 // Magnetic Field formula : raw data x magnetic cross-axis sensitivity
@@ -111,9 +105,16 @@ void initMagnetometer(){
     initI2C();
     configureAccelerometer();
     configureMagnetometer();
-    //calibrateAccelerometer();
+    calibrateAccelerometer();
 }
 
+void getMagnetometerTimeout(bool *result){
+    *result = magnetometerTimeoutReceived;
+}
+
+void setMagnetometerTimeout(bool value){
+    magnetometerTimeoutReceived = value;
+}
 
 // int main() {
 //     stdio_init_all();

@@ -30,16 +30,18 @@ char determine_wheel(float inital_angle, float curr_angle)
     return chosen_wheel;
 }
 
+
 float compute_pid(float target_spd, float curr_spd, float *integral, float *prev_error)
-{    
+{
     // Initialize PID gains
     //
-    float Kp = 1.0; 
-    float Ki = 0.1; 
-    float Kd = 0.01; 
+    float Kp = 1; 
+    float Ki = 0.3; 
+    float Kd = 0.1; 
     // Get the current error
     //
-    float error = target_spd - curr_spd;
+    float error = (target_spd - curr_spd)/1000;
+    printf("Error: %f\n",error);
 
     // Update the Integral
     //
