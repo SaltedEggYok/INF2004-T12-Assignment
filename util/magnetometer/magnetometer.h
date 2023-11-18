@@ -34,6 +34,8 @@
 // #define PIN_SCL 15
 
 
+
+void calibrateAccelerometer();
 void readAccelerometerData(int16_t* x, int16_t* y, int16_t* z);
 void readMagnetometerData(int16_t* x, int16_t* y, int16_t* z);
 void calculateAcceleration(int16_t x, int16_t y, int16_t z);

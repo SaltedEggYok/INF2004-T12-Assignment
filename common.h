@@ -2,8 +2,8 @@
 //constants used in the project
 #ifndef COMMON_H   
 #define COMMON_H
-
 #include <stdint.h>
+#include <stdbool.h>
 
 //for ultrasonic.h*****************************************
 #define ULTRASONIC_ECHO_PIN 0
@@ -89,6 +89,11 @@
 
 #endif //COMMON_H
 
+// static void printMessage(const char* message);
+// static void vTemperatureTask(void* pvParameters);
+// static void vMovingAverageTask(void* pvParameters);
+// static void vSimpleAverageTask(void* pvParameters);
+// static void vPrintTask(void* pvParameters);
 /*
 Used Pins
 2 - right motor reverse
@@ -105,3 +110,14 @@ Used Pins
 27 - left sensor
 28 - right sensor
 */
+
+// Configuration Parameters
+#define MESSAGE_BUFFER_SIZE 64
+#define MAX_MESSAGE_LENGTH 54
+
+
+extern int16_t bias_x;
+extern int16_t bias_y;
+extern int16_t bias_z;
+
+extern volatile bool magnetometerTimeoutReceived;

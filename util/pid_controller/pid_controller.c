@@ -30,10 +30,8 @@ char determine_wheel(float inital_angle, float curr_angle)
     return chosen_wheel;
 }
 
-
 float compute_pid(float target_spd, float curr_spd, float *integral, float *prev_error)
-{
-    
+{    
     // Initialize PID gains
     //
     float Kp = 1.0; 
