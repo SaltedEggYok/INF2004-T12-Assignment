@@ -79,6 +79,7 @@ const int reverseLetterX[9] = {1, 0, 0, 0, 1, 0, 0, 1, 0};
 const int reverseLetterY[9] = {0, 0, 0, 0, 1, 0, 0, 1, 1};
 const int reverseLetterZ[9] = {0, 0, 0, 0, 1, 0, 0, 1, 1};
 
+/** Function to compare two integer arrays to see if it matches any character*/
 int matchArray(int a[], const int b[])
 {
     int i;
@@ -90,6 +91,7 @@ int matchArray(int a[], const int b[])
     return 0; // If array equal, return 0
 }
 
+/** Initialize sensors for barcode scanning and line detection */
 void initSensor(void)
 {
     printf("[Encoder] Init start \n");
@@ -107,6 +109,7 @@ void initSensor(void)
     printf("[Encoder] Init done \n");
 }
 
+/* Checks if the barcode sensor is ready to start scanning if not start */
 int startScanningBarcode()
 {
     if (gpio_get(BARCODE_SENSOR) == 0)
@@ -115,6 +118,8 @@ int startScanningBarcode()
         return 1; // For integration into main
     };
 }
+
+/* Scans the barcode, tracking time between transitions (black to white or white to black) */
 void scanning()
 {
     static uint32_t lastDetectionTime = 0; 
@@ -140,6 +145,7 @@ void scanning()
     }
 }
 
+/* Determines if the barcode scan is complete based on asterisk detection */
 bool isBarcodeComplete()
 {
     if (countAsterisk >= 2)
@@ -150,6 +156,8 @@ bool isBarcodeComplete()
     else
         return false;
 }
+
+/** Processes the finalString to return the decoded character */
 const char *returnChar()
 {
     int tempCount = 0;
@@ -173,16 +181,18 @@ const char *returnChar()
 
     int len = strlen(finalString);
     if (len == 3) {
-        static char tempStr[2]; // Static so it persists after the function returns
-        tempStr[0] = finalString[1]; // Get the middle character
-        tempStr[1] = '\0'; // Null-terminate the string
-        return tempStr; // Return the string with just the middle character
+        static char tempStr[2];
+        tempStr[0] = finalString[1]; 
+        tempStr[1] = '\0'; 
+        return tempStr; 
     }
     return finalString;
 }
+
+/* Resets variables to prepare for a new barcode scanning */
 void resetForNewString()
 {
-    countAsterisk = 0;                    // Reset count star
+    countAsterisk = 0;                    // Reset count asterisk
     varCharASCII = '~';               // Reset variable
     arrayAsteriskisNotMatch = true;         // Set back star as not found
     strcpy(finalString, "");          // Clear contents of string
@@ -190,6 +200,7 @@ void resetForNewString()
     startScanningBarcodeState = false; // Exit barcode state
 }
 
+/* Decodes the thick and thin bars into characters by comparing the timing array to predefined patterns */
 void decodeChar() {
     // Define a mapping of patterns to their respective characters
     const int* patterns[] = { letterA, letterB, letterC, letterD, letterE, letterF, letterG,
@@ -227,15 +238,13 @@ void decodeChar() {
     varCharASCII = '~';
 }
 
-
-
-
-
+/* Determines if one character worth of bars/spaces has been read */
 bool oneCharRead()
 {
     return (arrayVar == 10);
 }
 
+/* Processes the timings to identify thick and thin bars and decode the character */
 void decodeThickThinBar()
 {
     if (!patternComplete) {
@@ -347,10 +356,12 @@ void decodeThickThinBar()
     patternComplete = false;
 }
 
+/** Retrieve the current state of the left IR sensor */
 void getLeftSensor(bool* leftSensor){
     *leftSensor = gpio_get(LEFT_IR_SENSOR);
 }
 
+/** Retrieve the current state of the right IR sensor */
 void getRightSensor(bool* rightSensor){
     *rightSensor = gpio_get(RIGHT_IR_SENSOR);
 }
