@@ -29,33 +29,33 @@ void main_callback(unsigned int gpio, long unsigned int events)
     //
     if (gpio == L_WHEEL_ENCODER)
     {
-        // get_dst(l_start_time,l_prev_time,l_triggered);
-        l_triggered += 1;
-        // Once a previous timing exists
-        //
-        if (l_prev_time)
-        {
-            l_start_time = time_us_64();
-            l_speed = get_dst(l_start_time, l_prev_time, l_triggered);
-            printf("Left Wheel Speed: %.2f/s\n", l_speed);
-        }
-        l_prev_time = time_us_64();
+        // // get_dst(l_start_time,l_prev_time,l_triggered);
+        // l_triggered += 1;
+        // // Once a previous timing exists
+        // //
+        // if (l_prev_time)
+        // {
+        //     l_start_time = time_us_64();
+        //     l_speed = get_dst(l_start_time, l_prev_time, l_triggered);
+        //     printf("Left Wheel Speed: %.2f/s\n", l_speed);
+        // }
+        // l_prev_time = time_us_64();
     }
     // Right Wheel Encoder
     //
     else if (gpio == R_WHEEL_ENCODER)
     {
-        r_triggered += 1;
+        // r_triggered += 1;
 
-        // Once a previous timing exists
-        //
-        if (r_prev_time)
-        {
-            r_start_time = time_us_64();
-            r_speed = get_dst(r_start_time, r_prev_time, r_triggered);
-            printf("Right Wheel Speed: %.2f/s\n", r_speed);
-        }
-        r_prev_time = time_us_64();
+        // // Once a previous timing exists
+        // //
+        // if (r_prev_time)
+        // {
+        //     r_start_time = time_us_64();
+        //     r_speed = get_dst(r_start_time, r_prev_time, r_triggered);
+        //     printf("Right Wheel Speed: %.2f/s\n", r_speed);
+        // }
+        // r_prev_time = time_us_64();
     }
     // UltraSonic Sensor
     //
@@ -71,15 +71,16 @@ void main_callback(unsigned int gpio, long unsigned int events)
     }
     else if (gpio == ULTRASONIC_ECHO_PIN)
     {
-        if (gpio_get(ULTRASONIC_ECHO_PIN) == 1)
-        {
-            startTime_ultra = get_absolute_time();
-        }
-        else
-        {
-            endTime_ultra = get_absolute_time();
-            echoReceived = true;
-        }
+        ultrasonicCallback(gpio, events);
+        // if (gpio_get(ULTRASONIC_ECHO_PIN) == 1)
+        // {
+        //     startTime_ultra = get_absolute_time();
+        // }
+        // else
+        // {
+        //     endTime_ultra = get_absolute_time();
+        //     echoReceived = true;
+        // }
     }
 }
 
@@ -125,20 +126,16 @@ void main_callback(unsigned int gpio, long unsigned int events)
 // init everything
 void initAll()
 {
-
     // init local variables
     currMode = DEFAULT;
     currMoveState = STATIONARY;
     leftSensor = rightSensor = false;
 
-    initSensor(&leftSensor, &rightSensor);
-    //initMagnetometer();
-    // calibrateAccelerometer();
+    initSensor(&leftSensor, &rightSensor, &barcodeSensor);
+    //initMagnetometer(&magnetometerTimeoutReceived, &compassBearing);
     // initMap();
     initMotorController(&leftSliceNum, &rightSliceNum, &direction);
-    printf("Left Slice Num: %d\n", leftSliceNum);
-    printf("Right Slice Num: %d\n", rightSliceNum);
-    //initUltrasonic();
+    initUltrasonic(&ultrasonicTimeoutReceived, &ultrasonicDistance);
     initWheelEncoder();
     // initWifi(&wifiEnabled);
 }
@@ -244,10 +241,84 @@ void updateMovement()
     }
 }
 
+void mainTask(__unused void *params){
+    if (cyw43_arch_init()) {
+        printf("failed to initialise\n");
+        return;
+    }
+
+    //cyw43_arch_enable_sta_mode();
+
+    sleep_ms(5000);
+    printf("Starting Main Task \n");
+
+    move_forward();
+
+    float fps = 1;
+    float frame_time = 1000 / fps;
+    float dt = frame_time / 1000;
+
+
+    while(true){
+        //if(leftSensor != NULL && rightSensor != NULL)
+        //{
+        printf("Left Sensor Main: %d, Right Sensor Main: %d\n", leftSensor, rightSensor);
+        //}
+        vTaskDelay(frame_time);
+    }
+}
+
+
+// void pidTask(__unused void *params){
+//     if (cyw43_arch_init()) {
+//         printf("failed to initialise\n");
+//         return;
+//     }
+
+//     printf("Starting PID task \n");
+//     float fps = 1;
+//     float frame_time = 1000 / fps;
+//     float dt = frame_time / 1000;
+
+
+//     while(true)
+//     {
+       
+//         updated_duty_cycle = compute_pid(r_speed *dt, l_speed *dt, &integral, &prev_error);
+      
+//         //updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
+//         //when intergral becomes negative, means left wheel too fast, reduce,
+//         //however it is reducing too fast? and then the wheel stops so
+//         //need to find a way to reduce the speed slowly? 
+//         //but if the wheel ever stops, then speed doesnt update since callback not called
+//         //so need to find a way to update speed even if callback not called?
+//         //also when the wheel is turning backwards speed isnt directly negative?
+//         printf("Modifier: %f\n", updated_duty_cycle);
+//         duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; //update duty cycle reduce magnitude?
+//         duty_cycle = MAX(duty_cycle, 0.3f); //MINUMUM DUTY CYCLE
+//         duty_cycle = MIN(duty_cycle, 0.8f); //MAXIMUM DUTY CYCLE
+//         printf("Modified Duty Cycle : %f\n", duty_cycle);
+//         update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
+    
+//     }
+
 // task launching function
 void vLaunch(void){
+
+    TaskHandle_t main_task;
+    xTaskCreate(mainTask, "MainThread", configMINIMAL_STACK_SIZE, NULL, 1, &main_task);
+
     TaskHandle_t sensor_task;
-    xTaskCreate(sensorTask, "TestMainThread", configMINIMAL_STACK_SIZE, NULL, 5, &sensor_task);
+    xTaskCreate(sensorTask, "SensorThread", configMINIMAL_STACK_SIZE, NULL, 5, &sensor_task);
+
+    TaskHandle_t ultrasonic_task;
+    xTaskCreate(ultrasonicTask, "UltrasonicThread", configMINIMAL_STACK_SIZE, NULL, 6, &ultrasonic_task);
+
+    // TaskHandle_t magnetometer_task;
+    // xTaskCreate(magnetometerTask, "MagnetometerThread", configMINIMAL_STACK_SIZE, NULL, 7, &magnetometer_task);
+
+    TaskHandle_t barcode_task;
+    xTaskCreate(barcodeTask, "BarcodeThread", configMINIMAL_STACK_SIZE, NULL, 8, &barcode_task);
 
     /* Start the tasks and timer running. */
     vTaskStartScheduler();
@@ -257,130 +328,143 @@ int main()
 {
     stdio_init_all();
 
-    sleep_ms(5000);
-    printf("Starting...\n");
-
-    // gpio_set_dir(BTN_PIN, GPIO_IN);
-    // gpio_set_pulls(BTN_PIN, true, false);
-
-    // if (cyw43_arch_init()) {
-    //     printf("Wi-Fi init failed.");
-    //     return -1;
-    // }
-    // init everything
+    printf("Starting Main \n");
     initAll();
 
-    sleep_ms(2000);
-    printf("Init Passed...\n");
+    printf("Init\n");
 
-    // xTaskCreate(vTemperatureTask,"Temp_Task",configMINIMAL_STACK_SIZE,NULL,8,NULL);
-    // xTaskCreate(vMovingTask,"Moving_Task",configMINIMAL_STACK_SIZE,NULL,7,NULL);
     gpio_set_irq_enabled_with_callback(L_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
     gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
     gpio_set_irq_enabled_with_callback(ULTRASONIC_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &main_callback);
+
+    printf("Callback set\n");
+
+    vLaunch();
+
+
+    // sleep_ms(5000);
+    // printf("Starting...\n");
+
+    // // gpio_set_dir(BTN_PIN, GPIO_IN);
+    // // gpio_set_pulls(BTN_PIN, true, false);
+
+    // // if (cyw43_arch_init()) {
+    // //     printf("Wi-Fi init failed.");
+    // //     return -1;
+    // // }
+    // // init everything
+    // initAll();
+
+    // sleep_ms(2000);
+    // printf("Init Passed...\n");
+
+    // xTaskCreate(vTemperatureTask,"Temp_Task",configMINIMAL_STACK_SIZE,NULL,8,NULL);
+    // xTaskCreate(vMovingTask,"Moving_Task",configMINIMAL_STACK_SIZE,NULL,7,NULL);
+    // gpio_set_irq_enabled_with_callback(L_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
+    // gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
+    // gpio_set_irq_enabled_with_callback(ULTRASONIC_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &main_callback);
     // gpio_set_irq_enabled_with_callback(LEFT_IR_SENSOR,GPIO_IRQ_EDGE_RISE,false,&main_callback);
     // gpio_set_irq_enabled_with_callback(RIGHT_IR_SENSOR,GPIO_IRQ_EDGE_RISE,false,&main_callback);
     // gpio_set_irq_enabled_with_callback(BARCODE_SENSOR,GPIO_IRQ_EDGE_RISE,false,&main_callback);
 
     // vTaskStartScheduler();
-    move_forward();
 
-    absolute_time_t frame_start;
-    absolute_time_t frame_end;
-    uint16_t frame_duration;
-    float fps = 10;
-    float frame_time = 1000 / fps;
-    float dt = frame_time / 1000;
-    printf("Frame Time: %f\n", frame_time);
 
-    //short sleep
-    sleep_ms(100);
-    vLaunch();
+    // absolute_time_t frame_start;
+    // absolute_time_t frame_end;
+    // uint16_t frame_duration;
+    // float fps = 10;
+    // float frame_time = 1000 / fps;
+    // float dt = frame_time / 1000;
+    // printf("Frame Time: %f\n", frame_time);
 
-    while (true)
-    {
-        frame_start = get_absolute_time();
+    // //short sleep
+    // sleep_ms(100);
+
+    // while (true)
+    // {
+    //     frame_start = get_absolute_time();
         
-        printf("Left Sensor Main : %d\n", leftSensor);
-        printf("Right Sensor Main : %d\n", rightSensor);
+    //     printf("Left Sensor Main : %d\n", leftSensor);
+    //     printf("Right Sensor Main : %d\n", rightSensor);
 
-        // // Correct Left Wheel Speed to Right Wheel
-        // //
-        // printf("L_speed : %f\n",l_speed);
-        // printf("R_speed: %f\n",r_speed);
-        // updated_duty_cycle = compute_pid(r_speed *dt, l_speed *dt, &integral, &prev_error);
+    //     // // Correct Left Wheel Speed to Right Wheel
+    //     // //
+    //     // printf("L_speed : %f\n",l_speed);
+    //     // printf("R_speed: %f\n",r_speed);
+    //     // updated_duty_cycle = compute_pid(r_speed *dt, l_speed *dt, &integral, &prev_error);
       
-        // //updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
-        // //when intergral becomes negative, means left wheel too fast, reduce,
-        // //however it is reducing too fast? and then the wheel stops so
-        // //need to find a way to reduce the speed slowly? 
-        // //but if the wheel ever stops, then speed doesnt update since callback not called
-        // //so need to find a way to update speed even if callback not called?
-        // //also when the wheel is turning backwards speed isnt directly negative?
-        // printf("Modifier: %f\n", updated_duty_cycle);
-        // duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; //update duty cycle reduce magnitude?
-        // duty_cycle = MAX(duty_cycle, 0.3f); //MINUMUM DUTY CYCLE
-        // duty_cycle = MIN(duty_cycle, 0.8f); //MAXIMUM DUTY CYCLE
-        // printf("Modified Duty Cycle : %f\n", duty_cycle);
-        // update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
+    //     // //updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
+    //     // //when intergral becomes negative, means left wheel too fast, reduce,
+    //     // //however it is reducing too fast? and then the wheel stops so
+    //     // //need to find a way to reduce the speed slowly? 
+    //     // //but if the wheel ever stops, then speed doesnt update since callback not called
+    //     // //so need to find a way to update speed even if callback not called?
+    //     // //also when the wheel is turning backwards speed isnt directly negative?
+    //     // printf("Modifier: %f\n", updated_duty_cycle);
+    //     // duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; //update duty cycle reduce magnitude?
+    //     // duty_cycle = MAX(duty_cycle, 0.3f); //MINUMUM DUTY CYCLE
+    //     // duty_cycle = MIN(duty_cycle, 0.8f); //MAXIMUM DUTY CYCLE
+    //     // printf("Modified Duty Cycle : %f\n", duty_cycle);
+    //     // update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
     
 
 
    
-        //update_speed(rightSliceNum, PWM_CHAN_B, duty_cycle);
-        // printf("curr Move State: %d\n", currMoveState);
-        // printf("curr Mode: %d\n", currMode);
+    //     //update_speed(rightSliceNum, PWM_CHAN_B, duty_cycle);
+    //     // printf("curr Move State: %d\n", currMoveState);
+    //     // printf("curr Mode: %d\n", currMode);
 
-        // updateBehaviour();
-        // updateMovement();
+    //     // updateBehaviour();
+    //     // updateMovement();
 
-        // double distance_cm = getCm(&echoReceived,startTime_ultra,endTime_ultra,timeout,&ultrasonicTimeoutReceived);
+    //     // double distance_cm = getCm(&echoReceived,startTime_ultra,endTime_ultra,timeout,&ultrasonicTimeoutReceived);
 
-        // if (!ultrasonicTimeoutReceived) {
-        //     printf("Distance from nearest object: %.2f (cm)\n", distance_cm);
-        // } else {
-        //     printf("Timeout reached.\n");
-        //     ultrasonicTimeoutReceived = false;
-        // }
-        // int16_t x_acc, y_acc, z_acc;
-        // int16_t x_mag, y_mag, z_mag;
+    //     // if (!ultrasonicTimeoutReceived) {
+    //     //     printf("Distance from nearest object: %.2f (cm)\n", distance_cm);
+    //     // } else {
+    //     //     printf("Timeout reached.\n");
+    //     //     ultrasonicTimeoutReceived = false;
+    //     // }
+    //     // int16_t x_acc, y_acc, z_acc;
+    //     // int16_t x_mag, y_mag, z_mag;
 
-        // bool magTimeout;
-        // getMagnetometerTimeout(&magTimeout);
+    //     // bool magTimeout;
+    //     // getMagnetometerTimeout(&magTimeout);
 
-        // if (!magTimeout)
-        // {
-        //     readAccelerometerData(&x_acc, &y_acc, &z_acc);
-        //     readMagnetometerData(&x_mag, &y_mag, &z_mag);
-        //     // convertMagDataToUT(&x_mag, &y_mag, &z_mag);
-        //     calculateAcceleration(x_acc, y_acc, z_acc);
-        //     // printf("Accelerometer Data: (X = %d, Y = %d, Z = %d)\n", x_acc, y_acc, z_acc);
-        //     // printf("Magnetometer Data: (X = %d, Y = %d, Z = %d)\n", x_mag, y_mag, z_mag);
+    //     // if (!magTimeout)
+    //     // {
+    //     //     readAccelerometerData(&x_acc, &y_acc, &z_acc);
+    //     //     readMagnetometerData(&x_mag, &y_mag, &z_mag);
+    //     //     // convertMagDataToUT(&x_mag, &y_mag, &z_mag);
+    //     //     calculateAcceleration(x_acc, y_acc, z_acc);
+    //     //     // printf("Accelerometer Data: (X = %d, Y = %d, Z = %d)\n", x_acc, y_acc, z_acc);
+    //     //     // printf("Magnetometer Data: (X = %d, Y = %d, Z = %d)\n", x_mag, y_mag, z_mag);
 
-        //     double compass_bearing = getCompassBearing(x_mag, y_mag);
-        //     // printf("Compass Bearing: %.2f degrees\n", compass_bearing);
-        // }
-        // else
-        // {
-        //     // printf("Magnetometer read timed out.\n");
-        //     // magnetometerTimeoutReceived = false;
-        //     setMagnetometerTimeout(false);
-        // }
+    //     //     double compass_bearing = getCompassBearing(x_mag, y_mag);
+    //     //     // printf("Compass Bearing: %.2f degrees\n", compass_bearing);
+    //     // }
+    //     // else
+    //     // {
+    //     //     // printf("Magnetometer read timed out.\n");
+    //     //     // magnetometerTimeoutReceived = false;
+    //     //     setMagnetometerTimeout(false);
+    //     // }
 
-        // if(gpio_get(BTN_PIN))
-        // {
-        //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-        //     sleep_ms(250);
-        //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-        //     sleep_ms(250);
-        // }
+    //     // if(gpio_get(BTN_PIN))
+    //     // {
+    //     //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+    //     //     sleep_ms(250);
+    //     //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+    //     //     sleep_ms(250);
+    //     // }
 
-        // getting fps
-        frame_end = get_absolute_time();
-        frame_duration = absolute_time_diff_us(frame_start, frame_end);
-        printf("Sleep Duration: %f\n", frame_time - frame_duration / 1000); //DEBUG
-        sleep_ms(frame_time - frame_duration / 1000);
+    //     // getting fps
+    //     frame_end = get_absolute_time();
+    //     frame_duration = absolute_time_diff_us(frame_start, frame_end);
+    //     printf("Sleep Duration: %f\n", frame_time - frame_duration / 1000); //DEBUG
+    //     sleep_ms(frame_time - frame_duration / 1000);
 
-        // sleep_ms(1000/60); // 60 fps
-    }
+    //     // sleep_ms(1000/60); // 60 fps
+    // }
 }

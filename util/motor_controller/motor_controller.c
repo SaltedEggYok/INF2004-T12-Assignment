@@ -44,8 +44,6 @@ uint8_t get_slice_num(int motor_no)
 //
 void enable_motors(uint8_t l_slice_num, uint8_t r_slice_num)
 {
-    printf("enablemotors left slice num: %d\n", l_slice_num);
-    printf("enablemotors right slice num: %d\n", r_slice_num);
     // Allocate the gpio pins of the left and right motor to the pwm
     //
     gpio_set_function(LEFT_MOTOR, GPIO_FUNC_PWM);

@@ -9,17 +9,16 @@ volatile int arrayVar = 0;
 volatile int charStartEndCheck[9];
 volatile int timeChanges[9];
 volatile int startReading = 0;
-int varcharStartEndAsterisk[9]; 
-volatile int countAsterisk = 0; 
-volatile int compareQ = 0; 
-char varCharASCII = '~';      
-char finalString[22];          
-char sanitizedFinalString[20]; 
-const int TIMEOUT = 1200;      
-bool arrayAsteriskisNotMatch = true; 
+int varcharStartEndAsterisk[9];
+volatile int countAsterisk = 0;
+volatile int compareQ = 0;
+char varCharASCII = '~';
+char finalString[22];
+char sanitizedFinalString[20];
+const int TIMEOUT = 1200;
+bool arrayAsteriskisNotMatch = true;
 bool patternComplete = false;
 #define EXPECTED_TRANSITIONS 9
-
 
 // Mapping
 const int charStartEndAsterisk[9] = {0, 1, 0, 0, 1, 0, 1, 0, 0};
@@ -51,10 +50,6 @@ const int letterX[9] = {0, 1, 0, 0, 1, 0, 0, 0, 1};
 const int letterY[9] = {1, 1, 0, 0, 1, 0, 0, 0, 0};
 const int letterZ[9] = {0, 1, 1, 0, 1, 0, 0, 0, 0};
 
-bool *leftSensePtr = NULL, *rightSensePtr = NULL;
-
-bool *leftSensePtr = NULL, *rightSensePtr = NULL;
-
 const int reverseCharStartEnd[9] = {0, 0, 1, 0, 1, 0, 0, 1, 0};
 const int reverseCharSpace[9] = {0, 0, 1, 0, 0, 0, 1, 1, 0};
 const int reverseLetterA[9] = {1, 0, 0, 1, 0, 0, 0, 0, 1};
@@ -84,6 +79,8 @@ const int reverseLetterX[9] = {1, 0, 0, 0, 1, 0, 0, 1, 0};
 const int reverseLetterY[9] = {0, 0, 0, 0, 1, 0, 0, 1, 1};
 const int reverseLetterZ[9] = {0, 0, 0, 0, 1, 0, 0, 1, 1};
 
+bool *leftSensePtr = NULL, *rightSensePtr = NULL, *barcodePtr = NULL;
+
 /** Function to compare two integer arrays to see if it matches any character*/
 int matchArray(int a[], const int b[])
 {
@@ -96,12 +93,13 @@ int matchArray(int a[], const int b[])
     return 0; // If array equal, return 0
 }
 
-void initSensor(bool * leftptr, bool * rightptr)
+void initSensor(bool *leftSensor, bool *rightSensor, bool * barcodeSensor)
 {
     printf("[Encoder] Init start \n");
 
-    leftSensePtr = leftptr;
-    rightSensePtr = rightptr;
+    leftSensePtr = leftSensor;
+    rightSensePtr = rightSensor;
+    barcodePtr = barcodeSensor;
 
     // Initialization
     gpio_init(BARCODE_SENSOR);
@@ -140,25 +138,28 @@ int startScanningBarcode()
 /* Scans the barcode, tracking time between transitions (black to white or white to black) */
 void scanning()
 {
-    static uint32_t lastDetectionTime = 0; 
-    const uint32_t debounceTime = 10; 
+    static uint32_t lastDetectionTime = 0;
+    const uint32_t debounceTime = 10;
 
-    uint32_t currentTime = time_us_32() / 1000; 
+    uint32_t currentTime = time_us_32() / 1000;
     bool currentSensorState = gpio_get(BARCODE_SENSOR);
 
-    if (currentTime - lastDetectionTime > debounceTime) {
+    if (currentTime - lastDetectionTime > debounceTime)
+    {
         // Check for state change
-        if ((currentSensorState == 1 && infraFlag == true) || 
-            (currentSensorState == 0 && infraFlag == false)) {
-            infraFlag = !infraFlag; 
-            charStartEndCheck[arrayVar] = currentTime; 
-            arrayVar += 1; 
+        if ((currentSensorState == 1 && infraFlag == true) ||
+            (currentSensorState == 0 && infraFlag == false))
+        {
+            infraFlag = !infraFlag;
+            charStartEndCheck[arrayVar] = currentTime;
+            arrayVar += 1;
 
-            //printf("Time: %d ms, Bar: %s\n", currentTime, currentSensorState ? "Black" : "White");
-            if (arrayVar == EXPECTED_TRANSITIONS) {
+             printf("Time: %d ms, Bar: %s\n", currentTime, currentSensorState ? "Black" : "White");
+            if (arrayVar == EXPECTED_TRANSITIONS)
+            {
                 patternComplete = true; // Set the pattern complete flag
             }
-            lastDetectionTime = currentTime; 
+            lastDetectionTime = currentTime;
         }
     }
 }
@@ -198,11 +199,12 @@ const char *returnChar()
     }
 
     int len = strlen(finalString);
-    if (len == 3) {
+    if (len == 3)
+    {
         static char tempStr[2];
-        tempStr[0] = finalString[1]; 
-        tempStr[1] = '\0'; 
-        return tempStr; 
+        tempStr[0] = finalString[1];
+        tempStr[1] = '\0';
+        return tempStr;
     }
     return finalString;
 }
@@ -210,36 +212,41 @@ const char *returnChar()
 /* Resets variables to prepare for a new barcode scanning */
 void resetForNewString()
 {
-    countAsterisk = 0;                    // Reset count asterisk
-    varCharASCII = '~';               // Reset variable
-    arrayAsteriskisNotMatch = true;         // Set back star as not found
-    strcpy(finalString, "");          // Clear contents of string
-    strcpy(sanitizedFinalString, ""); // Clear contents of cleaned string
+    countAsterisk = 0;                 // Reset count asterisk
+    varCharASCII = '~';                // Reset variable
+    arrayAsteriskisNotMatch = true;    // Set back star as not found
+    strcpy(finalString, "");           // Clear contents of string
+    strcpy(sanitizedFinalString, "");  // Clear contents of cleaned string
     startScanningBarcodeState = false; // Exit barcode state
 }
 
 /* Decodes the thick and thin bars into characters by comparing the timing array to predefined patterns */
-void decodeChar() {
+void decodeChar()
+{
     // Define a mapping of patterns to their respective characters
-    const int* patterns[] = { letterA, letterB, letterC, letterD, letterE, letterF, letterG,
-                              letterH, letterI, letterJ, letterK, letterL, letterM, letterN,
-                              letterO, letterP, letterQ, letterR, letterS, letterT, letterU,
-                              letterV, letterW, letterX, letterY, letterZ, reverseLetterA, reverseLetterB, reverseLetterC, reverseLetterD, reverseLetterE, reverseLetterF, reverseLetterG,
-                                    reverseLetterH, reverseLetterI, reverseLetterJ, reverseLetterK, reverseLetterL, reverseLetterM, reverseLetterN,
-                                    reverseLetterO, reverseLetterP, reverseLetterQ, reverseLetterR, reverseLetterS, reverseLetterT, reverseLetterU,
-                                    reverseLetterV, reverseLetterW, reverseLetterX, reverseLetterY, reverseLetterZ};
+    const int *patterns[] = {letterA, letterB, letterC, letterD, letterE, letterF, letterG,
+                             letterH, letterI, letterJ, letterK, letterL, letterM, letterN,
+                             letterO, letterP, letterQ, letterR, letterS, letterT, letterU,
+                             letterV, letterW, letterX, letterY, letterZ, reverseLetterA, reverseLetterB, reverseLetterC, reverseLetterD, reverseLetterE, reverseLetterF, reverseLetterG,
+                             reverseLetterH, reverseLetterI, reverseLetterJ, reverseLetterK, reverseLetterL, reverseLetterM, reverseLetterN,
+                             reverseLetterO, reverseLetterP, reverseLetterQ, reverseLetterR, reverseLetterS, reverseLetterT, reverseLetterU,
+                             reverseLetterV, reverseLetterW, reverseLetterX, reverseLetterY, reverseLetterZ};
     const char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const int numPatterns = sizeof(patterns) / sizeof(patterns[0]);
 
-    if (patternComplete) {
-        for (int i = 0; i < numPatterns; ++i) {
+    if (patternComplete)
+    {
+        for (int i = 0; i < numPatterns; ++i)
+        {
             // Check for a forward pattern match
-            if (matchArray(varcharStartEndAsterisk, patterns[i]) == 0 && i < 26) {
+            if (matchArray(varcharStartEndAsterisk, patterns[i]) == 0 && i < 26)
+            {
                 varCharASCII = chars[i]; // Direct mapping for forward patterns
                 break;
             }
             // Check for a reverse pattern match
-            else if (matchArray(varcharStartEndAsterisk, patterns[i]) == 0 && i >= 26) {
+            else if (matchArray(varcharStartEndAsterisk, patterns[i]) == 0 && i >= 26)
+            {
                 varCharASCII = chars[i % 26]; // Map reverse patterns to forward character
                 break;
             }
@@ -247,13 +254,14 @@ void decodeChar() {
     }
 
     // Only add the character to finalString if it's not a '*'
-    if (varCharASCII != '\0' && varCharASCII != '*') {
+    if (varCharASCII != '\0' && varCharASCII != '*')
+    {
         strncat(finalString, &varCharASCII, 1);
     }
-    
+
     // Reset the patternComplete flag
     patternComplete = false;
-    varCharASCII = '~';
+ 
 }
 
 /* Determines if one character worth of bars/spaces has been read */
@@ -265,12 +273,13 @@ bool oneCharRead()
 /* Processes the timings to identify thick and thin bars and decode the character */
 void decodeThickThinBar()
 {
-// Check if a complete pattern has been read. If not, exit the function early.
-    if (!patternComplete) {
+    // Check if a complete pattern has been read. If not, exit the function early.
+    if (!patternComplete)
+    {
         return;
     }
 
-// Calculate the time differences between transitions and store them in the timeChanges array.
+    // Calculate the time differences between transitions and store them in the timeChanges array.
     for (int i = 0; i < 9; i++)
     {
         timeChanges[i] = charStartEndCheck[i + 1] - charStartEndCheck[i];
@@ -284,9 +293,9 @@ void decodeThickThinBar()
 
     // Initialize variables to store the indices and values of the three longest times,
     // which correspond to the thick bars in a barcode pattern.
-    int h1 = INT32_MIN; // Highest time value
-    int h2 = INT32_MIN; // Second highest time value
-    int h3 = INT32_MIN; // Third highest time value
+    int h1 = INT32_MIN;    // Highest time value
+    int h2 = INT32_MIN;    // Second highest time value
+    int h3 = INT32_MIN;    // Third highest time value
     int h1i, h2i, h3i = 0; // Indices of the highest times
 
     // Loop through the timeChanges array to find the three longest times.
@@ -300,7 +309,7 @@ void decodeThickThinBar()
             h2i = h1i;
             h1i = i;
 
-        // Record the new highest time and its index.
+            // Record the new highest time and its index.
             h3 = h2;
             h2 = h1;
             h1 = timeChanges[i];
@@ -309,11 +318,11 @@ void decodeThickThinBar()
         // If the current time is between the largest and second largest recorded times.
         else if (timeChanges[i] > h2)
         {
-        // Shift the third highest time and its index down.
+            // Shift the third highest time and its index down.
             h3i = h2i;
             h2i = i;
 
-        // Record the new second highest time.
+            // Record the new second highest time.
             h3 = h2;
             h2 = timeChanges[i];
         }
@@ -328,15 +337,15 @@ void decodeThickThinBar()
     }
     // Set the positions of the thick bars in the varcharStartEndAsterisk array based on the indices of the longest times.
     for (int i = 0; i < 9; i++)
-    {  
-            if (i == h1i || i == h2i || i == h3i)
-            {
-                varcharStartEndAsterisk[i] = 1; //Thick bar
-            }
-            else
-            {
-                varcharStartEndAsterisk[i] = 0; //Thin bar
-            }  
+    {
+        if (i == h1i || i == h2i || i == h3i)
+        {
+            varcharStartEndAsterisk[i] = 1; // Thick bar
+        }
+        else
+        {
+            varcharStartEndAsterisk[i] = 0; // Thin bar
+        }
     }
 
     // Print the complete pattern of thick and thin bars to the console.
@@ -352,8 +361,8 @@ void decodeThickThinBar()
         printf("Star deteceted Forward \n");
         if (varCharASCII != '*')
         {
-            varCharASCII = '*'; 
-             // Increase the asterisk count, ensuring it doesn't exceed two.
+            varCharASCII = '*';
+            // Increase the asterisk count, ensuring it doesn't exceed two.
             if (countAsterisk < 2)
             {
                 countAsterisk++;
@@ -364,10 +373,10 @@ void decodeThickThinBar()
     // Check if the detected pattern matches the reversed start/end asterisk pattern.
     else if (matchArray(varcharStartEndAsterisk, reverseCharStartEnd) == 0)
     {
-                printf("Star deteceted Reversed \n");
+        printf("Star deteceted Reversed \n");
         if (varCharASCII != '*')
         {
-            varCharASCII = '*'; 
+            varCharASCII = '*';
             if (countAsterisk < 2)
             {
                 countAsterisk++;
@@ -401,45 +410,88 @@ void decodeThickThinBar()
 }
 
 /** Retrieve the current state of the left IR sensor */
-void getLeftSensor(bool* leftSensor){
+void getLeftSensor(bool *leftSensor)
+{
     *leftSensor = gpio_get(LEFT_IR_SENSOR);
 }
 
 /** Retrieve the current state of the right IR sensor */
-void getRightSensor(bool* rightSensor){
+void getRightSensor(bool *rightSensor)
+{
     *rightSensor = gpio_get(RIGHT_IR_SENSOR);
 }
 
-int main() {
-    stdio_init_all(); // Initialize standard I/O
-    //initSensor(); // Initialize infrared sensor
+// int main() {
+//     stdio_init_all(); // Initialize standard I/O
+//     //initSensor(); // Initialize infrared sensor
 
-    while (true) {
-        tight_loop_contents(); // Function to keep CPU active
+//     while (true) {
+//         tight_loop_contents(); // Function to keep CPU active
 
-        if (startScanningBarcode()) { // Check if ready to start barcode scanning
-            while (!isBarcodeComplete()) { // Keep scanning until a character is ready to return
+//         if (startScanningBarcode()) { // Check if ready to start barcode scanning
+//             while (!isBarcodeComplete()) { // Keep scanning until a character is ready to return
+//                 scanning(); // Perform scanning operation
+
+//                 if (oneCharRead()) { // Check if one character is read
+//                     decodeThickThinBar(); // Process the timings to decode the character
+//                 }
+//             }
+
+//             const char* decodedString = returnChar(); // Get the decoded barcode string
+//             printf("Decoded Barcode: %s\n", decodedString); // Print or handle the decoded string
+
+//             resetForNewString();
+//         }
+//     }
+//     return 0;
+// }
+
+void sensorTask(__unused void *params)
+{
+    float fps = 1;
+    float frame_time = 1000 / fps;
+    float dt = frame_time / 1000;
+
+    while (true)
+    {
+        *leftSensePtr = gpio_get(LEFT_IR_SENSOR);
+        *rightSensePtr = gpio_get(RIGHT_IR_SENSOR);
+        printf("Left Sensor Task: %d, Right Sensor Task: %d\n", *leftSensePtr, *rightSensePtr); // DEBUG
+        vTaskDelay(frame_time);
+    }
+}
+
+void barcodeTask(__unused void *params)
+{
+    float fps = 30;
+    float frame_time = 1000 / fps;
+    float dt = frame_time / 1000;
+
+    while (true)
+    {
+        printf("Barcode Task\n"); // DEBUG
+        // Check if ready to start barcode scanning
+        if (startScanningBarcode())
+        { 
+            printf("Start Scanning Barcode\n"); // DEBUG
+            // Keep scanning until a character is ready to return
+            while (!isBarcodeComplete())
+            {               
+                //printf("Scanning\n"); // DEBUG
                 scanning(); // Perform scanning operation
 
-                if (oneCharRead()) { // Check if one character is read
+                // Check if one character is read
+                if (oneCharRead())
+                {          
+                    printf("One Char Read\n"); // DEBUG
                     decodeThickThinBar(); // Process the timings to decode the character
                 }
             }
 
-            const char* decodedString = returnChar(); // Get the decoded barcode string
+            const char *decodedString = returnChar();       // Get the decoded barcode string
             printf("Decoded Barcode: %s\n", decodedString); // Print or handle the decoded string
 
-            resetForNewString(); 
+            resetForNewString();
         }
-    }
-    return 0;
-}
-
-void sensorTask(__unused void *params){
-    while(true){
-        vTaskDelay(1000/20);
-        *leftSensePtr = gpio_get(LEFT_IR_SENSOR);
-        *rightSensePtr = gpio_get(RIGHT_IR_SENSOR);
-        printf("Left Sensor Task: %d, Right Sensor Task: %d\n", *leftSensePtr, *rightSensePtr);
     }
 }

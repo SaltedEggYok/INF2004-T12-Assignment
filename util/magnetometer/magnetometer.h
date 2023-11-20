@@ -40,6 +40,6 @@ void calculateAcceleration(int16_t x, int16_t y, int16_t z);
 double getCompassBearing(int16_t x, int16_t y);
 uint8_t readRegister(uint8_t address, uint8_t reg);
 
-void initMagnetometer();
-void getMagnetometerTimeout(bool *result);
-void setMagnetometerTimeout(bool value);
+void initMagnetometer(volatile bool *magnetometerTimeoutReceived,volatile double* compassBearing);
+
+void magnetometerTask(__unused void *params);
