@@ -412,30 +412,28 @@ void getRightSensor(bool* rightSensor){
 
 int main() {
     stdio_init_all(); // Initialize standard I/O
-    initSensor(); // Initialize infrared sensor
+    //initSensor(); // Initialize infrared sensor
 
-//     while (true) {
-//         tight_loop_contents(); // Function to keep CPU active
+    while (true) {
+        tight_loop_contents(); // Function to keep CPU active
 
-//         if (startScanningBarcode()) { // Check if ready to start barcode scanning
-//             while (!isBarcodeComplete()) { // Keep scanning until a character is ready to return
-//                 scanning(); // Perform scanning operation
+        if (startScanningBarcode()) { // Check if ready to start barcode scanning
+            while (!isBarcodeComplete()) { // Keep scanning until a character is ready to return
+                scanning(); // Perform scanning operation
 
-//                 if (oneCharRead()) { // Check if one character is read
-//                     decodeThickThinBar(); // Process the timings to decode the character
-//                 }
-//             }
+                if (oneCharRead()) { // Check if one character is read
+                    decodeThickThinBar(); // Process the timings to decode the character
+                }
+            }
 
-            // Once the barcode is fully scanned and decoded
             const char* decodedString = returnChar(); // Get the decoded barcode string
             printf("Decoded Barcode: %s\n", decodedString); // Print or handle the decoded string
 
-            resetForNewString(); // Reset for the next scanning operation
+            resetForNewString(); 
         }
     }
     return 0;
 }
-
 
 void sensorTask(__unused void *params){
     while(true){
