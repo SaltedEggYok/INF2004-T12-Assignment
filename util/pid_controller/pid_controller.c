@@ -35,16 +35,18 @@ float compute_pid(float target_spd, float curr_spd, float *integral, float *prev
 {
     // Initialize PID gains
     //
-    // float Kp = 1; 
-    // float Ki = 0.3; 
-    // float Kd = 0.1; 
-    float Kp = 0.05; 
-    float Ki = 0.98; 
-    float Kd = 0.0525; 
+    float Kp = 1.0; 
+    float Ki = 0.5;
+    float Kd = 0.1; 
+    // float Kp = 0.05; 
+    // float Ki = 0.98; 
+    // float Kd = 0.0525; 
 
     // Get the current error
     //
-    float error = (target_spd - curr_spd)/750;
+    printf("Target Spd: %f\n",target_spd);
+    printf("Current Spd: %f\n",curr_spd);   
+    float error = (target_spd - curr_spd);
     printf("Error: %f\n",error);
 
     // Update the Integral
@@ -56,7 +58,9 @@ float compute_pid(float target_spd, float curr_spd, float *integral, float *prev
 
     // Modified duty_cycle
     //
-    float duty_cycle_response = (Kp * error) + (Ki * *integral) + (Kd *  derivative); 
+    printf("Integral: %f\n",*integral);
+    printf("Derivative: %f\n",derivative);
+    float duty_cycle_response = (Kp * error) + (Ki * (*integral)) + (Kd *  derivative); 
 
     // Update the error
     //

@@ -45,6 +45,8 @@ const int letterX[9] = {0, 1, 0, 0, 1, 0, 0, 0, 1};
 const int letterY[9] = {1, 1, 0, 0, 1, 0, 0, 0, 0};
 const int letterZ[9] = {0, 1, 1, 0, 1, 0, 0, 0, 0};
 
+bool *leftSensePtr = NULL, *rightSensePtr = NULL;
+
 int matchArray(int a[], const int b[])
 {
     int i;
@@ -56,9 +58,12 @@ int matchArray(int a[], const int b[])
     return 0; // If array equal, return 0
 }
 
-void initSensor(void)
+void initSensor(bool * leftptr, bool * rightptr)
 {
     printf("[Encoder] Init start \n");
+
+    leftSensePtr = leftptr;
+    rightSensePtr = rightptr;
 
     // Initialization
     gpio_init(BARCODE_SENSOR);
@@ -263,6 +268,7 @@ void decodeThickThinBar()
     decodeChar(); // Decode char & add to finalString based on array of timings
 }
 
+//MIGHT BE OBSOLETED BY VIRTUE OF CHANGING TO TASKS
 //pass by reference from main, to get sensor readings
 void getLeftSensor(bool* leftSensor){
     *leftSensor = gpio_get(LEFT_IR_SENSOR);
@@ -297,3 +303,11 @@ void getRightSensor(bool* rightSensor){
 //     return 0;
 // }
 
+void sensorTask(__unused void *params){
+    while(true){
+        vTaskDelay(1000/20);
+        *leftSensePtr = gpio_get(LEFT_IR_SENSOR);
+        *rightSensePtr = gpio_get(RIGHT_IR_SENSOR);
+        printf("Left Sensor Task: %d, Right Sensor Task: %d\n", *leftSensePtr, *rightSensePtr);
+    }
+}

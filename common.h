@@ -4,6 +4,8 @@
 #define COMMON_H
 
 #include <stdint.h>
+#include "FreeRTOS.h"
+#include "task.h"
 
 //for ultrasonic.h*****************************************
 #define ULTRASONIC_ECHO_PIN 0
@@ -26,7 +28,7 @@
 // N4 - 3
 // MOTOR WIRE RED NEARER THE 3 PINS SIDE (VBUS SIDE)
 // when car facing forward , right side - right 2 
-// #define LEFT_MOTOR 21
+// #define LEFT_MOTOR 21 
 // #define L_REVERSE_PIN 2
 // #define L_CLOCKWISE_PIN 3
 
@@ -34,13 +36,18 @@
 // #define R_REVERSE_PIN 10
 // #define R_CLOCKWISE_PIN 11
 
-#define LEFT_MOTOR 7
-#define L_REVERSE_PIN 4
-#define L_CLOCKWISE_PIN 5
+#define LEFT_MOTOR 6 //BLUE, ENA
+#define L_REVERSE_PIN 4 //ORANGE, IN2
+#define L_CLOCKWISE_PIN 5 //YELLOW, IN1
 
-#define RIGHT_MOTOR 6
-#define R_REVERSE_PIN 2
-#define R_CLOCKWISE_PIN 3
+#define RIGHT_MOTOR 7 //WHITE, ENB
+#define R_REVERSE_PIN 2 //GREY, IN3
+#define R_CLOCKWISE_PIN 3 //BLACK -> PURPLE, IN4 
+
+#define LEFT_CHANNEL PWM_CHAN_A
+
+//GRND WHITE - YELLOW - GREEN
+//VBUS GREEN 
 
 // For Wheel Encoder --------------------------------------------
 //
@@ -114,4 +121,16 @@ Used Pins
 18 - left wheel encoder
 19 - right wheel encoder
 26 - barcode sensor UNUSED
+*/
+
+/*
+Wheel Encoder layout
+Left Wheel Encoder
+Left - 18
+Middle - Splitter
+Right - GND
+Right Wheel Encoder
+Left - 19
+Middle - Splitter
+Right - GND
 */

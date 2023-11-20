@@ -26,12 +26,12 @@
 // forward declaration of enum
 enum pwm_chan;
 
-void reset_speed(uint8_t *l_slice_num, uint8_t *r_slice_num);
+void reset_speed(uint8_t l_slice_num, uint8_t r_slice_num);
 void move_forward();
-void turn_left(uint8_t *l_slice_num, uint8_t *r_slice_num, bool direction);
-void turn_right(uint8_t *l_slice_num, uint8_t *r_slice_num, bool direction);
-void stop_motors(uint8_t *l_slice_num, uint8_t *r_slice_num);
-void update_speed(uint8_t *slice_num, enum pwm_chan channel, float duty_cycle);
+void turn_left(uint8_t l_slice_num, uint8_t r_slice_num, bool direction);
+void turn_right(uint8_t l_slice_num, uint8_t r_slice_num, bool direction);
+void stop_motors(uint8_t l_slice_num, uint8_t r_slice_num);
+void update_speed(uint8_t slice_num, enum pwm_chan channel, float duty_cycle);
 void reverse();
 
 void initMotorController(uint8_t *l_slice_num, uint8_t *r_slice_num, bool *direction);
