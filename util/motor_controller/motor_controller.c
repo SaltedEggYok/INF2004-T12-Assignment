@@ -28,7 +28,9 @@ void initialize_gpio_pins()
 //
 void update_speed(uint8_t slice_num, enum pwm_chan channel, float duty_cycle)
 {
+    printf("Updating speed\n");
     pwm_set_chan_level(slice_num, channel, CLK_CYCLE_NO * duty_cycle);
+    printf("Updated speed\n");
 }
 
 // Retrieves the slice number attached to a specific motor
@@ -61,8 +63,8 @@ void enable_motors(uint8_t l_slice_num, uint8_t r_slice_num)
 
     // Set the default duty cycles of both PWM channels to be 50%
     //
-    pwm_set_chan_level(l_slice_num, PWM_CHAN_A, CLK_CYCLE_NO * 0.7);
-    pwm_set_chan_level(r_slice_num, PWM_CHAN_B, CLK_CYCLE_NO * 0.7);
+    pwm_set_chan_level(l_slice_num, PWM_CHAN_A, CLK_CYCLE_NO * 0.5);
+    pwm_set_chan_level(r_slice_num, PWM_CHAN_B, CLK_CYCLE_NO * 0.5);
 
     // Set the respective pwms to run
     //
@@ -84,6 +86,7 @@ void move_forward()
 //
 void reverse()
 {
+    printf("REVERSING\n");
     gpio_put(L_CLOCKWISE_PIN, 0);
     gpio_put(L_REVERSE_PIN, 1);
     gpio_put(R_CLOCKWISE_PIN, 0);

@@ -6,47 +6,114 @@
 
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
-//#include "stdio.h"
+// #include "stdio.h"
+#include "message_buffer.h"
 
 #include "wheel_encoder.h"
 #include "common.h"
 
-// volatile int l_triggered = 0;
-// volatile int r_triggered = 0;
+volatile int l_triggered = 0;
+volatile int r_triggered = 0;
 
-// uint64_t r_start_time = 0;
-// uint64_t r_prev_time = 0;
+uint64_t r_start_time = 0;
+uint64_t r_prev_time = 0;
 
-// uint64_t l_start_time = 0;
-// uint64_t l_prev_time = 0;
+uint64_t l_start_time = 0;
+uint64_t l_prev_time = 0;
 
-// static float l_speed = 0.0;
-// static float r_speed = 0.0;
+// linked to main_lib.h
+volatile float *l_speed_ptr = NULL;
+volatile float *r_speed_ptr = NULL;
+
+//define buffers
+static MessageBufferHandle_t xControlMessageBuffer_TempToAvg;
+static MessageBufferHandle_t xControlMessageBuffer_TempToTenAvg;
+static MessageBufferHandle_t xControlMessageBuffer_TempToPrint;
+static MessageBufferHandle_t xControlMessageBuffer_AvgToPrint;
+static MessageBufferHandle_t xControlMessageBuffer_TenAvgToPrint;
+
+
 
 // Get the speed value of either wheel
 //
-float get_dst(float start_time, float prev_time,float dir_triggered)
+float get_dst(float start_time, float prev_time, float dir_triggered)
 {
     // Get the time between the current time and the prev time to get the time elapsed per edge rise
     //
-    float elapsed_time =  start_time - prev_time;
+    float elapsed_time = start_time - prev_time;
     // Convert to seconds
     //
     float time_secs = elapsed_time / 1000000;
+    printf("time secs : %f \n", time_secs);
     // Get speed
     //
-    float speed = DISTANCE_STATE/time_secs;
+    float speed = DISTANCE_STATE / time_secs;
     // Get the distance Travelled
     //
     float distance_travelled = DISTANCE_STATE * dir_triggered;
-    printf("Time Elapsed: %.2fs\n",time_secs);
+    printf("Time Elapsed: %.2fs\n", time_secs);
     printf("Distance Travelled: %.2fcm\n", distance_travelled);
 
     return speed;
 }
+
+void wheelEncoderTask(__unused void *params)
+{
+    printf("Starting Wheel Encoder Task \n");
+    float fps = 100;
+    float frame_time = 1000 / fps;
+    float dt = frame_time / 1000;
+    while (true)
+    {
+
+        // delay frame time
+        vTaskDelay(frame_time);
+    }
+}
+
 // ISR which detects which wheel encoder was triggered and updates speed variable
 //
-// void wheel_callback(unsigned int gpio, long unsigned int events) 
+void wheel_callback(unsigned int gpio, long unsigned int events)
+{
+    // Left Wheel Encoder
+    //
+    if (gpio == L_WHEEL_ENCODER)
+    {
+        // // get_dst(l_start_time,l_prev_time,l_triggered);
+        l_triggered += 1;
+        printf("Left Wheel Encoder Triggered: %d\n", l_triggered);
+
+        //
+
+        // // Once a previous timing exists
+        // //
+        // if (l_prev_time)
+        // {
+        //     l_start_time = time_us_64();
+        //     l_speed = get_dst(l_start_time, l_prev_time, l_triggered);
+        //     printf("Left Wheel Speed: %.2f/s\n", l_speed);
+        // }
+        // l_prev_time = time_us_64();
+    }
+    // Right Wheel Encoder
+    //
+    else if (gpio == R_WHEEL_ENCODER)
+    {
+        // r_triggered += 1;
+
+        // // Once a previous timing exists
+        // //
+        // if (r_prev_time)
+        // {
+        //     r_start_time = time_us_64();
+        //     r_speed = get_dst(r_start_time, r_prev_time, r_triggered);
+        //     printf("Right Wheel Speed: %.2f/s\n", r_speed);
+        // }
+        // r_prev_time = time_us_64();
+    }
+}
+
+// void wheel_callback(unsigned int gpio, long unsigned int events)
 // {
 //     if(gpio == R_WHEEL_ENCODER)
 //     {
@@ -73,35 +140,6 @@ float get_dst(float start_time, float prev_time,float dir_triggered)
 //         l_prev_time = time_us_64();
 //     }
 // }
-
-// void wheel_callback(unsigned int gpio, long unsigned int events) 
-// {
-//     if(gpio == R_WHEEL_ENCODER)
-//     {
-//         r_triggered +=1;
-//         // Once a previous timing exists
-//         //
-//         if(r_prev_time)
-//         {
-//             r_start_time = time_us_64();
-//             r_speed = get_dst(r_start_time,r_prev_time,r_triggered);
-//         }
-//         r_prev_time = time_us_64();
-//     }
-//     if(gpio == L_WHEEL_ENCODER)
-//     {
-//         l_triggered +=1;
-//         // Once a previous timing exists
-//         //
-//         if(l_prev_time)
-//         {
-//             l_start_time = time_us_64();
-//             l_speed = get_dst(l_start_time,l_prev_time,l_triggered);
-//         }
-//         l_prev_time = time_us_64();
-//     }
-// }
-
 
 // Enables the ISR for both wheel encoders
 //
@@ -113,14 +151,18 @@ float get_dst(float start_time, float prev_time,float dir_triggered)
 
 // Initialize wheel encoder
 //
-void initWheelEncoder()
+void initWheelEncoder(volatile float *l_speed, volatile float *r_speed)
 {
+    // linking pointers
+    l_speed_ptr = l_speed;
+    r_speed_ptr = r_speed;
+
     // Initialize all gpio pins
     //
     gpio_init(L_WHEEL_ENCODER);
     gpio_init(R_WHEEL_ENCODER);
-    gpio_set_dir(L_WHEEL_ENCODER,GPIO_OUT);
-    gpio_set_dir(R_WHEEL_ENCODER,GPIO_OUT);
+    gpio_set_dir(L_WHEEL_ENCODER, GPIO_OUT);
+    gpio_set_dir(R_WHEEL_ENCODER, GPIO_OUT);
 }
 
 // int main() {
@@ -144,4 +186,3 @@ void initWheelEncoder()
 //         update_speed_wheel(&r_slice_num_wheel,PWM_CHAN_B,0.5);
 //     }
 // }
-

@@ -32,25 +32,27 @@ bool leftSensor = false, rightSensor = false, barcodeSensor = false;
 //for use with motor_controller.h
 uint8_t leftSliceNum, rightSliceNum; 
 bool direction = false;
+bool currOrientation = true; //true - curr forward, false - curr backward
 
 //for use with wiif.h
 bool wifiEnabled = false;
 
 //for use with wheel_encoder.h
-volatile int l_triggered = 0;
-volatile int r_triggered = 0;
+// volatile int l_triggered = 0;
+// volatile int r_triggered = 0;
 
-uint64_t r_start_time = 0;
-uint64_t r_prev_time = 0;
+// uint64_t r_start_time = 0;
+// uint64_t r_prev_time = 0;
 
-uint64_t l_start_time = 0;
-uint64_t l_prev_time = 0;
+// uint64_t l_start_time = 0;
+// uint64_t l_prev_time = 0;
 
+//linked with l_speed_ptr and r_speed_ptr, in wheel_encoder.h
 volatile float l_speed = 0.0;
 volatile float r_speed = 0.0;
 
-static float duty_cycle = 0.8;
-static float updated_duty_cycle = 0.0;
+volatile float duty_cycle = 0.7;
+volatile float updated_duty_cycle = 0.0;
 
 float integral = 0.0;
 float prev_error = 0.0;
@@ -58,12 +60,18 @@ float prev_error = 0.0;
 
 //for use with ultrasonic.h
 //linked with echoReceived_ptr and ultrasonicTimeoutReceived_ptr
-volatile float ultrasonicDistance = false;
+volatile float ultrasonicDistance = 0.0;
 volatile bool ultrasonicTimeoutReceived = false;
 
 //for use with magnetometer.h
 volatile bool magnetometerTimeoutReceived = false;
 volatile double compassBearing = 0.0;
+
+//for use with pid_controller.h
+volatile float leftSpeed = 0.0;
+volatile float rightSpeed = 0.0;
+
+
 // int16_t bias_x = 0;
 // int16_t bias_y = 0;
 // int16_t bias_z = 0;

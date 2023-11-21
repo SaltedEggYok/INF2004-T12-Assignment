@@ -21,6 +21,7 @@
 #include "util/wheel_encoder/wheel_encoder.h"
 #include "util/pid_controller/pid_controller.h"
 
+
 void main_callback(unsigned int gpio, long unsigned int events)
 {
     // printf("Callback\n");
@@ -30,7 +31,8 @@ void main_callback(unsigned int gpio, long unsigned int events)
     if (gpio == L_WHEEL_ENCODER)
     {
         // // get_dst(l_start_time,l_prev_time,l_triggered);
-        // l_triggered += 1;
+        l_triggered += 1;
+        printf("Left Wheel Encoder Triggered: %d\n", l_triggered);
         // // Once a previous timing exists
         // //
         // if (l_prev_time)
@@ -84,45 +86,6 @@ void main_callback(unsigned int gpio, long unsigned int events)
     }
 }
 
-// void readMagnetometerData(int16_t* x, int16_t* y, int16_t* z) {
-//     *x = (int16_t)((readRegister(MAG_ADDRESS, OUT_X_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_X_L_M));
-//     *y = (int16_t)((readRegister(MAG_ADDRESS, OUT_Y_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_Y_L_M));
-//     *z = (int16_t)((readRegister(MAG_ADDRESS, OUT_Z_H_M) << 8) | readRegister(MAG_ADDRESS, OUT_Z_L_M));
-
-//     if ((*x == -16192 && *y == -16192 && *z == -16192) ||
-//         (*x == 16448 && *y == 16448 && *z == 16448) ||
-//         (*x == -32640 && *y == -32640 && *z == -32640) ||
-//         (*x == 0 && *y == 0 && *z == 0)) {
-//         magnetometerTimeoutReceived = true;
-//     }
-// }
-
-// void calibrateAccelerometer() {
-//     const int numSamples = 100;
-//     int16_t x_accum = 0;
-//     int16_t y_accum = 0;
-//     int16_t z_accum = 0;
-
-//     for (int i = 0; i < numSamples; i++) {
-//         int16_t x, y, z;
-//         readAccelerometerData(&x, &y, &z);
-//         x_accum += x;
-//         y_accum += y;
-//         z_accum += z;
-//         sleep_ms(10);
-//     }
-
-//     bias_x = x_accum / numSamples;
-//     bias_y = y_accum / numSamples;
-//     bias_z = z_accum / numSamples;
-// }
-
-// void readAccelerometerData(int16_t* x, int16_t* y, int16_t* z) {
-//     *x = (int16_t)((readRegister(ACC_ADDRESS, OUT_X_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_X_L_A)) - bias_x;
-//     *y = (int16_t)((readRegister(ACC_ADDRESS, OUT_Y_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_Y_L_A)) - bias_y;
-//     *z = (int16_t)((readRegister(ACC_ADDRESS, OUT_Z_H_A) << 8) | readRegister(ACC_ADDRESS, OUT_Z_L_A)) - bias_z;
-// }
-
 // init everything
 void initAll()
 {
@@ -132,8 +95,8 @@ void initAll()
     leftSensor = rightSensor = false;
 
     initSensor(&leftSensor, &rightSensor, &barcodeSensor);
-    //initMagnetometer(&magnetometerTimeoutReceived, &compassBearing);
-    // initMap();
+    // initMagnetometer(&magnetometerTimeoutReceived, &compassBearing);
+    //  initMap();
     initMotorController(&leftSliceNum, &rightSliceNum, &direction);
     initUltrasonic(&ultrasonicTimeoutReceived, &ultrasonicDistance);
     initWheelEncoder();
@@ -241,13 +204,15 @@ void updateMovement()
     }
 }
 
-void mainTask(__unused void *params){
-    if (cyw43_arch_init()) {
+void mainTask(__unused void *params)
+{
+    if (cyw43_arch_init())
+    {
         printf("failed to initialise\n");
         return;
     }
 
-    //cyw43_arch_enable_sta_mode();
+    // cyw43_arch_enable_sta_mode();
 
     sleep_ms(5000);
     printf("Starting Main Task \n");
@@ -258,52 +223,85 @@ void mainTask(__unused void *params){
     float frame_time = 1000 / fps;
     float dt = frame_time / 1000;
 
-
-    while(true){
-        //if(leftSensor != NULL && rightSensor != NULL)
+    while (true)
+    {
+        // if(leftSensor != NULL && rightSensor != NULL)
         //{
-        printf("Left Sensor Main: %d, Right Sensor Main: %d\n", leftSensor, rightSensor);
+        //printf("Left Sensor Main: %d, Right Sensor Main: %d\n", leftSensor, rightSensor);
         //}
         vTaskDelay(frame_time);
     }
 }
 
+void obstacleTask(__unused void *params)
+{
 
-// void pidTask(__unused void *params){
-//     if (cyw43_arch_init()) {
-//         printf("failed to initialise\n");
-//         return;
-//     }
+    printf("Starting Obstacle Task \n");
+
+    float fps = 3;
+    float frame_time = 1000 / fps;
+
+    while (true)
+    {
+        // If detected object,reverse
+        //
+        if (ultrasonicDistance <= 7.0)
+        {
+            // if currently moving forward, reverse
+            if (currOrientation == true)
+            {
+                currOrientation = false;
+                reverse();
+                vTaskDelay(2 * frame_time);
+
+                // sleep a bit to reverse
+            }
+        }
+        else
+        {
+            // if currently moving backward, move forward
+            if (currOrientation == false)
+            {
+                currOrientation = true;
+                move_forward();
+            }
+        }
+        vTaskDelay(frame_time);
+    }
+}
+
+// void pidTask(__unused void *params)
+// {
 
 //     printf("Starting PID task \n");
-//     float fps = 1;
+//     float fps = 100;
 //     float frame_time = 1000 / fps;
 //     float dt = frame_time / 1000;
-
-
-//     while(true)
+//     while (true)
 //     {
-       
-//         updated_duty_cycle = compute_pid(r_speed *dt, l_speed *dt, &integral, &prev_error);
-      
-//         //updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
-//         //when intergral becomes negative, means left wheel too fast, reduce,
-//         //however it is reducing too fast? and then the wheel stops so
-//         //need to find a way to reduce the speed slowly? 
-//         //but if the wheel ever stops, then speed doesnt update since callback not called
-//         //so need to find a way to update speed even if callback not called?
-//         //also when the wheel is turning backwards speed isnt directly negative?
+//         updated_duty_cycle = compute_pid(r_speed, l_speed, &integral, &prev_error);
+//         // updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
+//         // when intergral becomes negative, means left wheel too fast, reduce,
+//         // however it is reducing too fast? and then the wheel stops so
+//         // need to find a way to reduce the speed slowly?
+//         // but if the wheel ever stops, then speed doesnt update since callback not called
+//         // so need to find a way to update speed even if callback not called?
+//         // also when the wheel is turning backwards speed isnt directly negative?
 //         printf("Modifier: %f\n", updated_duty_cycle);
-//         duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; //update duty cycle reduce magnitude?
-//         duty_cycle = MAX(duty_cycle, 0.3f); //MINUMUM DUTY CYCLE
-//         duty_cycle = MIN(duty_cycle, 0.8f); //MAXIMUM DUTY CYCLE
+//         duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; // update duty cycle reduce magnitude?
+//         duty_cycle = MAX(duty_cycle, 0.3f);              // MINUMUM DUTY CYCLE
+//         duty_cycle = MIN(duty_cycle, 0.8f);              // MAXIMUM DUTY CYCLE
 //         printf("Modified Duty Cycle : %f\n", duty_cycle);
 //         update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
-    
+
+//         //delay frame time
+//         vTaskDelay(frame_time);
 //     }
+// }
 
 // task launching function
-void vLaunch(void){
+void vLaunch(void)
+{
 
     TaskHandle_t main_task;
     xTaskCreate(mainTask, "MainThread", configMINIMAL_STACK_SIZE, NULL, 1, &main_task);
@@ -314,13 +312,18 @@ void vLaunch(void){
     TaskHandle_t ultrasonic_task;
     xTaskCreate(ultrasonicTask, "UltrasonicThread", configMINIMAL_STACK_SIZE, NULL, 6, &ultrasonic_task);
 
-    // TaskHandle_t magnetometer_task;
+    TaskHandle_t magnetometer_task;
     // xTaskCreate(magnetometerTask, "MagnetometerThread", configMINIMAL_STACK_SIZE, NULL, 7, &magnetometer_task);
 
     TaskHandle_t barcode_task;
-    xTaskCreate(barcodeTask, "BarcodeThread", configMINIMAL_STACK_SIZE, NULL, 8, &barcode_task);
+    //xTaskCreate(barcodeTask, "BarcodeThread", configMINIMAL_STACK_SIZE, NULL, 8, &barcode_task);
 
-    /* Start the tasks and timer running. */
+    TaskHandle_t obstacle_task;
+    xTaskCreate(obstacleTask, "ObstacleThread", configMINIMAL_STACK_SIZE, NULL, 9, &obstacle_task);
+
+    TaskHandle_t pid_task;
+    // xTaskCreate(pidTask, "PIDThread", configMINIMAL_STACK_SIZE, NULL, 15, &pid_task);
+    // /* Start the tasks and timer running. */
     vTaskStartScheduler();
 }
 
@@ -328,20 +331,41 @@ int main()
 {
     stdio_init_all();
 
+    //sleep to delay starting
+    sleep_ms(5000);
+
     printf("Starting Main \n");
     initAll();
 
     printf("Init\n");
 
     gpio_set_irq_enabled_with_callback(L_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
-    gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
+    // gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
     gpio_set_irq_enabled_with_callback(ULTRASONIC_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &main_callback);
 
     printf("Callback set\n");
 
     vLaunch();
 
+    // while(true)
+    // {
+    //     updated_duty_cycle = compute_pid(r_speed, l_speed, &integral, &prev_error);
+    //     // updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
+    //     // when intergral becomes negative, means left wheel too fast, reduce,
+    //     // however it is reducing too fast? and then the wheel stops so
+    //     // need to find a way to reduce the speed slowly?
+    //     // but if the wheel ever stops, then speed doesnt update since callback not called
+    //     // so need to find a way to update speed even if callback not called?
+    //     // also when the wheel is turning backwards speed isnt directly negative?
+    //     printf("Modifier: %f\n", updated_duty_cycle);
+    //     duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; // update duty cycle reduce magnitude?
+    //     duty_cycle = MAX(duty_cycle, 0.3f);              // MINUMUM DUTY CYCLE
+    //     duty_cycle = MIN(duty_cycle, 0.8f);              // MAXIMUM DUTY CYCLE
+    //     printf("Modified Duty Cycle : %f\n", duty_cycle);
+    //     update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
+    // }
 
+    // }
     // sleep_ms(5000);
     // printf("Starting...\n");
 
@@ -369,7 +393,6 @@ int main()
 
     // vTaskStartScheduler();
 
-
     // absolute_time_t frame_start;
     // absolute_time_t frame_end;
     // uint16_t frame_duration;
@@ -384,7 +407,7 @@ int main()
     // while (true)
     // {
     //     frame_start = get_absolute_time();
-        
+
     //     printf("Left Sensor Main : %d\n", leftSensor);
     //     printf("Right Sensor Main : %d\n", rightSensor);
 
@@ -393,11 +416,11 @@ int main()
     //     // printf("L_speed : %f\n",l_speed);
     //     // printf("R_speed: %f\n",r_speed);
     //     // updated_duty_cycle = compute_pid(r_speed *dt, l_speed *dt, &integral, &prev_error);
-      
+
     //     // //updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
     //     // //when intergral becomes negative, means left wheel too fast, reduce,
     //     // //however it is reducing too fast? and then the wheel stops so
-    //     // //need to find a way to reduce the speed slowly? 
+    //     // //need to find a way to reduce the speed slowly?
     //     // //but if the wheel ever stops, then speed doesnt update since callback not called
     //     // //so need to find a way to update speed even if callback not called?
     //     // //also when the wheel is turning backwards speed isnt directly negative?
@@ -407,10 +430,7 @@ int main()
     //     // duty_cycle = MIN(duty_cycle, 0.8f); //MAXIMUM DUTY CYCLE
     //     // printf("Modified Duty Cycle : %f\n", duty_cycle);
     //     // update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
-    
 
-
-   
     //     //update_speed(rightSliceNum, PWM_CHAN_B, duty_cycle);
     //     // printf("curr Move State: %d\n", currMoveState);
     //     // printf("curr Mode: %d\n", currMode);

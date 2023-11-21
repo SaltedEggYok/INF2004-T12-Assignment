@@ -64,7 +64,9 @@ float compute_pid(float target_spd, float curr_spd, float *integral, float *prev
 
     // Update the error
     //
+    printf("Duty Cycle Response: %f\n",duty_cycle_response);
     *prev_error = error;
+    printf("Prev Error: %f\n",*prev_error);
 
     return duty_cycle_response;
 }
