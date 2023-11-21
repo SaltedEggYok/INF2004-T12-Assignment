@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "common.h"
+#include "message_buffer.h"
 
 
 // Motor Controller code to be remvoed after driver end
@@ -17,6 +18,9 @@
 // #define R_CLOCKWISE_PIN 11
 
 
-void initWheelEncoder(volatile float *l_speed, volatile float* r_speed);
+void initWheelEncoder(MessageBufferHandle_t *xMsgBuffer_LeftInterrupt, MessageBufferHandle_t *xMsgBuffer_RightInterrupt);
+void wheel_callback(unsigned int gpio, long unsigned int events);
+void wheelEncoderTask(__unused void *params);
 
-float get_dst(float start_time, float prev_time,float dir_triggered);
+// float get_dst(float start_time, float prev_time,float dir_triggered);
+float get_dst(absolute_time_t start_time, absolute_time_t prev_time, float dir_triggered);

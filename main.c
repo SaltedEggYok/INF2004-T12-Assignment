@@ -25,14 +25,15 @@
 void main_callback(unsigned int gpio, long unsigned int events)
 {
     // printf("Callback\n");
-    printf("Callback GPIO: %d\n", gpio);
+    //printf("Callback GPIO: %d\n", gpio);
     // Left Wheel Encoder
     //
     if (gpio == L_WHEEL_ENCODER)
     {
+        wheel_callback(gpio, events);
         // // get_dst(l_start_time,l_prev_time,l_triggered);
-        l_triggered += 1;
-        printf("Left Wheel Encoder Triggered: %d\n", l_triggered);
+        // l_triggered += 1;
+        // printf("Left Wheel Encoder Triggered: %d\n", l_triggered);
         // // Once a previous timing exists
         // //
         // if (l_prev_time)
@@ -47,6 +48,7 @@ void main_callback(unsigned int gpio, long unsigned int events)
     //
     else if (gpio == R_WHEEL_ENCODER)
     {
+        wheel_callback(gpio, events);
         // r_triggered += 1;
 
         // // Once a previous timing exists
@@ -93,13 +95,15 @@ void initAll()
     currMode = DEFAULT;
     currMoveState = STATIONARY;
     leftSensor = rightSensor = false;
+    xMsgBuffer_LeftInterrupt = xMessageBufferCreate(sizeof(float) * 2);
+    xMsgBuffer_RightInterrupt = xMessageBufferCreate(sizeof(float) * 2);
 
     initSensor(&leftSensor, &rightSensor, &barcodeSensor);
     // initMagnetometer(&magnetometerTimeoutReceived, &compassBearing);
     //  initMap();
     initMotorController(&leftSliceNum, &rightSliceNum, &direction);
     initUltrasonic(&ultrasonicTimeoutReceived, &ultrasonicDistance);
-    initWheelEncoder();
+    initWheelEncoder(&xMsgBuffer_LeftInterrupt, &xMsgBuffer_RightInterrupt);
     // initWifi(&wifiEnabled);
 }
 // const uint BTN_PIN = 14;
@@ -245,7 +249,7 @@ void obstacleTask(__unused void *params)
     {
         // If detected object,reverse
         //
-        if (ultrasonicDistance <= 7.0)
+        if (ultrasonicDistance <= 10.0)
         {
             // if currently moving forward, reverse
             if (currOrientation == true)
@@ -270,34 +274,55 @@ void obstacleTask(__unused void *params)
     }
 }
 
-// void pidTask(__unused void *params)
-// {
+void pidTask(__unused void *params)
+{
 
-//     printf("Starting PID task \n");
-//     float fps = 100;
-//     float frame_time = 1000 / fps;
-//     float dt = frame_time / 1000;
-//     while (true)
-//     {
-//         updated_duty_cycle = compute_pid(r_speed, l_speed, &integral, &prev_error);
-//         // updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
-//         // when intergral becomes negative, means left wheel too fast, reduce,
-//         // however it is reducing too fast? and then the wheel stops so
-//         // need to find a way to reduce the speed slowly?
-//         // but if the wheel ever stops, then speed doesnt update since callback not called
-//         // so need to find a way to update speed even if callback not called?
-//         // also when the wheel is turning backwards speed isnt directly negative?
-//         printf("Modifier: %f\n", updated_duty_cycle);
-//         duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; // update duty cycle reduce magnitude?
-//         duty_cycle = MAX(duty_cycle, 0.3f);              // MINUMUM DUTY CYCLE
-//         duty_cycle = MIN(duty_cycle, 0.8f);              // MAXIMUM DUTY CYCLE
-//         printf("Modified Duty Cycle : %f\n", duty_cycle);
-//         update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
+    printf("Starting PID task \n");
+    float fps = 20;
+    float frame_time = 1000 / fps;
+    float dt = frame_time / 1000;
 
-//         //delay frame time
-//         vTaskDelay(frame_time);
-//     }
-// }
+    float l_speed = 0.0, r_speed = 0.0, fReceivedData;
+    size_t xReceivedBytes;
+    while (true)
+    {
+        xReceivedBytes = xMessageBufferReceive( 
+            xMsgBuffer_LeftInterrupt,        /* The message buffer to receive from. */
+            (void *) &fReceivedData,      /* Location to store received data. */
+            sizeof( fReceivedData ),      /* Maximum number of bytes to receive. */
+            portMAX_DELAY );              /* Wait indefinitely */
+
+        l_speed = fReceivedData;
+        
+        xReceivedBytes = xMessageBufferReceive( 
+            xMsgBuffer_RightInterrupt,        /* The message buffer to receive from. */
+            (void *) &fReceivedData,      /* Location to store received data. */
+            sizeof( fReceivedData ),      /* Maximum number of bytes to receive. */
+            portMAX_DELAY );              /* Wait indefinitely */
+
+        r_speed = fReceivedData;
+
+
+        updated_duty_cycle = compute_pid(r_speed, l_speed, &integral, &prev_error);
+        // updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
+        // when intergral becomes negative, means left wheel too fast, reduce,
+        // however it is reducing too fast? and then the wheel stops so
+        // need to find a way to reduce the speed slowly?
+        // but if the wheel ever stops, then speed doesnt update since callback not called
+        // so need to find a way to update speed even if callback not called?
+        // also when the wheel is turning backwards speed isnt directly negative?
+        printf("Modifier: %f\n", updated_duty_cycle);
+        duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; // update duty cycle reduce magnitude?
+        duty_cycle = MAX(duty_cycle, 0.3f);              // MINUMUM DUTY CYCLE
+        duty_cycle = MIN(duty_cycle, 0.8f);              // MAXIMUM DUTY CYCLE
+        printf("Modified Duty Cycle : %f\n", duty_cycle);
+        update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
+
+        //delay frame time
+        vTaskDelay(frame_time);
+    }
+}
+
 
 // task launching function
 void vLaunch(void)
@@ -322,7 +347,11 @@ void vLaunch(void)
     xTaskCreate(obstacleTask, "ObstacleThread", configMINIMAL_STACK_SIZE, NULL, 9, &obstacle_task);
 
     TaskHandle_t pid_task;
-    // xTaskCreate(pidTask, "PIDThread", configMINIMAL_STACK_SIZE, NULL, 15, &pid_task);
+    //xTaskCreate(pidTask, "PIDThread", configMINIMAL_STACK_SIZE, NULL, 15, &pid_task);
+
+    TaskHandle_t wheel_encoder_task;
+    //xTaskCreate(wheelEncoderTask, "WheelEncoderThread", configMINIMAL_STACK_SIZE, NULL, 10, &wheel_encoder_task);
+
     // /* Start the tasks and timer running. */
     vTaskStartScheduler();
 }
@@ -339,7 +368,7 @@ int main()
 
     printf("Init\n");
 
-    gpio_set_irq_enabled_with_callback(L_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
+    // gpio_set_irq_enabled_with_callback(L_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
     // gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
     gpio_set_irq_enabled_with_callback(ULTRASONIC_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &main_callback);
 

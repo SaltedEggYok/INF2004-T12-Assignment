@@ -7,40 +7,58 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 // #include "stdio.h"
-#include "message_buffer.h"
 
 #include "wheel_encoder.h"
 #include "common.h"
 
-volatile int l_triggered = 0;
-volatile int r_triggered = 0;
+int l_triggered = 0;
+int r_triggered = 0;
 
-uint64_t r_start_time = 0;
-uint64_t r_prev_time = 0;
+absolute_time_t r_start_time;
+absolute_time_t r_prev_time;
 
-uint64_t l_start_time = 0;
-uint64_t l_prev_time = 0;
+absolute_time_t l_start_time;
+absolute_time_t l_prev_time;
 
 // linked to main_lib.h
-volatile float *l_speed_ptr = NULL;
-volatile float *r_speed_ptr = NULL;
+// volatile float l_speed = NULL;
+// volatile float r_speed = NULL;
 
 //define buffers
-static MessageBufferHandle_t xControlMessageBuffer_TempToAvg;
-static MessageBufferHandle_t xControlMessageBuffer_TempToTenAvg;
-static MessageBufferHandle_t xControlMessageBuffer_TempToPrint;
-static MessageBufferHandle_t xControlMessageBuffer_AvgToPrint;
-static MessageBufferHandle_t xControlMessageBuffer_TenAvgToPrint;
+MessageBufferHandle_t *xMsgBuffer_LeftInterrupt_ptr;
+MessageBufferHandle_t *xMsgBuffer_RightInterrupt_ptr;
+
+//stagger number of wheel encoding runs
+const int encodingLimit = 10;
 
 
 
 // Get the speed value of either wheel
 //
-float get_dst(float start_time, float prev_time, float dir_triggered)
-{
+// float get_dst(float start_time, float prev_time, float dir_triggered)
+// {
+//     // Get the time between the current time and the prev time to get the time elapsed per edge rise
+//     //
+//     float elapsed_time = start_time - prev_time;
+//     // Convert to seconds
+//     //
+//     float time_secs = elapsed_time / 1000000;
+//     printf("time secs : %f \n", time_secs);
+//     // Get speed
+//     //
+//     float speed = DISTANCE_STATE / time_secs;
+//     // Get the distance Travelled
+//     //
+//     float distance_travelled = DISTANCE_STATE * dir_triggered;
+//     printf("Time Elapsed: %.2fs\n", time_secs);
+//     printf("Distance Travelled: %.2fcm\n", distance_travelled);
+
+//     return speed;
+// }
+float get_dst(absolute_time_t start_time, absolute_time_t prev_time, float dir_triggered){
     // Get the time between the current time and the prev time to get the time elapsed per edge rise
     //
-    float elapsed_time = start_time - prev_time;
+    float elapsed_time = absolute_time_diff_us(prev_time, start_time);
     // Convert to seconds
     //
     float time_secs = elapsed_time / 1000000;
@@ -60,11 +78,15 @@ float get_dst(float start_time, float prev_time, float dir_triggered)
 void wheelEncoderTask(__unused void *params)
 {
     printf("Starting Wheel Encoder Task \n");
-    float fps = 100;
+    float fps = 1;
     float frame_time = 1000 / fps;
     float dt = frame_time / 1000;
     while (true)
     {
+
+        printf("Wheel Encoder Task \n");
+
+
 
         // delay frame time
         vTaskDelay(frame_time);
@@ -81,35 +103,58 @@ void wheel_callback(unsigned int gpio, long unsigned int events)
     {
         // // get_dst(l_start_time,l_prev_time,l_triggered);
         l_triggered += 1;
-        printf("Left Wheel Encoder Triggered: %d\n", l_triggered);
 
+        // Once a previous timing exists
         //
+    
+        if (!is_nil_time(l_prev_time) && l_triggered % encodingLimit == 0)        
+        {
+            l_start_time = get_absolute_time();
+            float l_speed = get_dst(l_start_time, l_prev_time, l_triggered);
+            printf("Left Wheel Speed: %.2f/s\n", l_speed);
+            // Send speed to main
 
-        // // Once a previous timing exists
-        // //
-        // if (l_prev_time)
-        // {
-        //     l_start_time = time_us_64();
-        //     l_speed = get_dst(l_start_time, l_prev_time, l_triggered);
-        //     printf("Left Wheel Speed: %.2f/s\n", l_speed);
-        // }
-        // l_prev_time = time_us_64();
+            xMessageBufferSendFromISR(
+                /* The message buffer to write to. */
+                *xMsgBuffer_LeftInterrupt_ptr,
+                /* The source of the data to send. */
+                (void *) &l_speed,
+                /* The length of the data to send. */
+                sizeof( l_speed ),
+                /* The block time; 0 = no block */
+                NULL 
+                );
+        
+        }
+        l_prev_time = get_absolute_time();
+        // printf("L_prev_time: %d\n",l_prev_time);
     }
     // Right Wheel Encoder
     //
     else if (gpio == R_WHEEL_ENCODER)
     {
-        // r_triggered += 1;
+        r_triggered += 1;
 
-        // // Once a previous timing exists
-        // //
-        // if (r_prev_time)
-        // {
-        //     r_start_time = time_us_64();
-        //     r_speed = get_dst(r_start_time, r_prev_time, r_triggered);
-        //     printf("Right Wheel Speed: %.2f/s\n", r_speed);
-        // }
-        // r_prev_time = time_us_64();
+        // Once a previous timing exists
+        //
+        if (!is_nil_time(r_prev_time) && r_triggered % encodingLimit == 0) 
+        {
+            r_start_time = get_absolute_time();
+            float r_speed = get_dst(r_start_time, r_prev_time, r_triggered);
+            printf("Right Wheel Speed: %.2f/s\n", r_speed);
+            //Send speed to main
+            xMessageBufferSendFromISR(
+                /* The message buffer to write to. */
+                *xMsgBuffer_RightInterrupt_ptr,
+                /* The source of the data to send. */
+                (void *) &r_speed,
+                /* The length of the data to send. */
+                sizeof( r_speed ),
+                /* The block time; 0 = no block */
+                NULL 
+                );
+        }
+        r_prev_time = get_absolute_time();
     }
 }
 
@@ -151,11 +196,13 @@ void wheel_callback(unsigned int gpio, long unsigned int events)
 
 // Initialize wheel encoder
 //
-void initWheelEncoder(volatile float *l_speed, volatile float *r_speed)
+void initWheelEncoder(MessageBufferHandle_t *xMsgBuffer_LeftInterrupt, MessageBufferHandle_t *xMsgBuffer_RightInterrupt)
 {
     // linking pointers
-    l_speed_ptr = l_speed;
-    r_speed_ptr = r_speed;
+    // l_speed_ptr = l_speed;
+    // r_speed_ptr = r_speed;
+    xMsgBuffer_LeftInterrupt_ptr = xMsgBuffer_LeftInterrupt;
+    xMsgBuffer_RightInterrupt_ptr = xMsgBuffer_RightInterrupt;
 
     // Initialize all gpio pins
     //

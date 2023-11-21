@@ -63,8 +63,8 @@ void enable_motors(uint8_t l_slice_num, uint8_t r_slice_num)
 
     // Set the default duty cycles of both PWM channels to be 50%
     //
-    pwm_set_chan_level(l_slice_num, PWM_CHAN_A, CLK_CYCLE_NO * 0.5);
-    pwm_set_chan_level(r_slice_num, PWM_CHAN_B, CLK_CYCLE_NO * 0.5);
+    pwm_set_chan_level(l_slice_num, PWM_CHAN_A, CLK_CYCLE_NO * 0.8);
+    pwm_set_chan_level(r_slice_num, PWM_CHAN_B, CLK_CYCLE_NO * 0.8);
 
     // Set the respective pwms to run
     //
