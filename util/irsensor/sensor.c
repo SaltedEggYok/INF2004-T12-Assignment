@@ -448,7 +448,7 @@ void getRightSensor(bool *rightSensor)
 
 void sensorTask(__unused void *params)
 {
-    float fps = 1;
+    float fps = 30;
     float frame_time = 1000 / fps;
     float dt = frame_time / 1000;
 

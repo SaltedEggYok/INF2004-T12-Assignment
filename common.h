@@ -14,8 +14,8 @@
 
 //for sensor.h*****************************************
 #define BARCODE_SENSOR 26 //for barcode
-#define LEFT_IR_SENSOR 12 //for left sensor
-#define RIGHT_IR_SENSOR 13 //for right sensor
+#define LEFT_IR_SENSOR 13 //for left sensor
+#define RIGHT_IR_SENSOR 12 //for right sensor
 
 //for motor_controller.h********************************
 #define CLK_CYCLE_NO 12500

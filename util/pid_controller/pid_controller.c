@@ -35,8 +35,8 @@ float compute_pid(float target_spd, float curr_spd, float *integral, float *prev
 {
     // Initialize PID gains
     //
-    float Kp = 1.0; 
-    float Ki = 0.2;
+    float Kp = 5.0; 
+    float Ki = 0.3;
     float Kd = 0.05; 
     // float Kp = 0.05; 
     // float Ki = 0.98; 

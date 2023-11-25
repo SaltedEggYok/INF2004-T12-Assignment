@@ -11,6 +11,7 @@
 #include "task.h"
 #include "hardware/pwm.h"
 #include "math.h"
+#include "time.h"
 
 #include "util/irsensor/sensor.h"
 #include "util/map/map.h"
@@ -21,11 +22,16 @@
 #include "util/wheel_encoder/wheel_encoder.h"
 #include "util/pid_controller/pid_controller.h"
 
+bool repeating_timer_callback(struct repeating_timer *t)
+{
+    printf("Repeat at %lld\n", time_us_64() / 1000000);
+    return true;
+}
 
 void main_callback(unsigned int gpio, long unsigned int events)
 {
     // printf("Callback\n");
-    //printf("Callback GPIO: %d\n", gpio);
+    // printf("Callback GPIO: %d\n", gpio);
     // Left Wheel Encoder
     //
     if (gpio == L_WHEEL_ENCODER)
@@ -85,6 +91,149 @@ void main_callback(unsigned int gpio, long unsigned int events)
         //     endTime_ultra = get_absolute_time();
         //     echoReceived = true;
         // }
+    }
+    else if (gpio == LEFT_IR_SENSOR)
+    {
+        //        struct repeating_timer timer;
+
+        absolute_time_t start_time;
+        // if (leftSensor == 1 && rightSensor == 1)
+        if (rightSensor == 1)
+        {
+            stop_motors(leftSliceNum, rightSliceNum);
+            //            add_repeating_timer_ms(-1000, repeating_timer_callback, NULL, &timer);
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1000000)
+            {
+                // timer of 1 second
+            }
+            reset_speed(leftSliceNum, rightSliceNum);
+            // reverse a bit
+            reverse();
+            // vTaskDelay(pdMS_TO_TICKS(1500));
+            //            add_repeating_timer_ms(-1500, repeating_timer_callback, NULL, &timer);
+
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1500000)
+            {
+                // timer of 1.5 seconds
+            }
+            // turn left
+            turn_left(leftSliceNum, rightSliceNum, true);
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1000000)
+            {
+                // timer of 1 seconds
+            }
+            reset_speed(leftSliceNum, rightSliceNum);
+            move_forward();
+        }
+        // else if (leftSensor == 1 && rightSensor == 0)
+        else if (rightSensor == 0)
+        {
+
+            stop_motors(leftSliceNum, rightSliceNum);
+            //            add_repeating_timer_ms(-1000, repeating_timer_callback, NULL, &timer);
+            start_time = get_absolute_time();
+
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1000000)
+            {
+                // timer of 1 second
+            }
+            reset_speed(leftSliceNum, rightSliceNum);
+            // reverse a bit
+            reverse();
+            // vTaskDelay(pdMS_TO_TICKS(1500));
+            //            add_repeating_timer_ms(-1500, repeating_timer_callback, NULL, &timer);
+
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1500000)
+            {
+                // timer of 1.5 seconds
+            }
+            turn_right(leftSliceNum, rightSliceNum, true);
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1000000)
+            {
+                // timer of 1.5 seconds
+            }
+            reset_speed(leftSliceNum, rightSliceNum);
+            move_forward();
+        }
+        else
+        {
+            // should never enter here
+            //  go forward
+            // move_forward();
+        }
+    }
+    else if (gpio == RIGHT_IR_SENSOR)
+    {
+
+        absolute_time_t start_time;
+
+        // if (leftSensor == 1 && rightSensor == 1)
+        if (leftSensor == 1)
+        {
+            stop_motors(leftSliceNum, rightSliceNum);
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1000000)
+            {
+                // timer of 1 second
+            }
+            reset_speed(leftSliceNum, rightSliceNum);
+            // reverse a bit
+            reverse();
+            // vTaskDelay(pdMS_TO_TICKS(1500));
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1500000)
+            {
+                // timer of 1.5 seconds
+            }
+            // turn left
+            turn_left(leftSliceNum, rightSliceNum, true);
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1000000)
+            {
+                // timer of 1.5 seconds
+            }
+            reset_speed(leftSliceNum, rightSliceNum);
+            move_forward();
+        }
+        // else if (rightSensor == 1 && leftSensor == 0)
+        else if (leftSensor == 0)
+        {
+            stop_motors(leftSliceNum, rightSliceNum);
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1000000)
+            {
+                // timer of 1 second
+            }
+            reset_speed(leftSliceNum, rightSliceNum);
+            // reverse a bit
+            reverse();
+            // vTaskDelay(pdMS_TO_TICKS(1500));
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1500000)
+            {
+                // timer of 1.5 seconds
+            }
+            // turn left
+            turn_left(leftSliceNum, rightSliceNum, true);
+            start_time = get_absolute_time();
+            while (absolute_time_diff_us(start_time, get_absolute_time()) < 1000000)
+            {
+                // timer of 1.5 seconds
+            }
+            reset_speed(leftSliceNum, rightSliceNum);
+            move_forward();
+        }
+        else
+        {
+            // should never enter here
+            //  go forward
+            // move_forward();
+        }
     }
 }
 
@@ -231,8 +380,14 @@ void mainTask(__unused void *params)
     {
         // if(leftSensor != NULL && rightSensor != NULL)
         //{
-        //printf("Left Sensor Main: %d, Right Sensor Main: %d\n", leftSensor, rightSensor);
+        // printf("Left Sensor Main: %d, Right Sensor Main: %d\n", leftSensor, rightSensor);
         //}
+
+        // if (leftSensor == false && rightSensor == false)
+        // {
+        //     move_forward();
+        // }
+
         vTaskDelay(frame_time);
     }
 }
@@ -286,22 +441,21 @@ void pidTask(__unused void *params)
     size_t xReceivedBytes;
     while (true)
     {
-        xReceivedBytes = xMessageBufferReceive( 
-            xMsgBuffer_LeftInterrupt,        /* The message buffer to receive from. */
-            (void *) &fReceivedData,      /* Location to store received data. */
-            sizeof( fReceivedData ),      /* Maximum number of bytes to receive. */
-            portMAX_DELAY );              /* Wait indefinitely */
+        xReceivedBytes = xMessageBufferReceive(
+            xMsgBuffer_LeftInterrupt, /* The message buffer to receive from. */
+            (void *)&fReceivedData,   /* Location to store received data. */
+            sizeof(fReceivedData),    /* Maximum number of bytes to receive. */
+            portMAX_DELAY);           /* Wait indefinitely */
 
         l_speed = fReceivedData;
-        
-        xReceivedBytes = xMessageBufferReceive( 
-            xMsgBuffer_RightInterrupt,        /* The message buffer to receive from. */
-            (void *) &fReceivedData,      /* Location to store received data. */
-            sizeof( fReceivedData ),      /* Maximum number of bytes to receive. */
-            portMAX_DELAY );              /* Wait indefinitely */
+
+        xReceivedBytes = xMessageBufferReceive(
+            xMsgBuffer_RightInterrupt, /* The message buffer to receive from. */
+            (void *)&fReceivedData,    /* Location to store received data. */
+            sizeof(fReceivedData),     /* Maximum number of bytes to receive. */
+            portMAX_DELAY);            /* Wait indefinitely */
 
         r_speed = fReceivedData;
-
 
         updated_duty_cycle = compute_pid(r_speed, l_speed, &integral, &prev_error);
         // updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
@@ -318,11 +472,10 @@ void pidTask(__unused void *params)
         printf("Modified Duty Cycle : %f\n", duty_cycle);
         update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
 
-        //delay frame time
+        // delay frame time
         vTaskDelay(frame_time);
     }
 }
-
 
 // task launching function
 void vLaunch(void)
@@ -341,16 +494,16 @@ void vLaunch(void)
     // xTaskCreate(magnetometerTask, "MagnetometerThread", configMINIMAL_STACK_SIZE, NULL, 7, &magnetometer_task);
 
     TaskHandle_t barcode_task;
-    //xTaskCreate(barcodeTask, "BarcodeThread", configMINIMAL_STACK_SIZE, NULL, 8, &barcode_task);
+    // xTaskCreate(barcodeTask, "BarcodeThread", configMINIMAL_STACK_SIZE, NULL, 8, &barcode_task);
 
     TaskHandle_t obstacle_task;
     xTaskCreate(obstacleTask, "ObstacleThread", configMINIMAL_STACK_SIZE, NULL, 9, &obstacle_task);
 
     TaskHandle_t pid_task;
-    //xTaskCreate(pidTask, "PIDThread", configMINIMAL_STACK_SIZE, NULL, 15, &pid_task);
+    // xTaskCreate(pidTask, "PIDThread", configMINIMAL_STACK_SIZE, NULL, 15, &pid_task);
 
     TaskHandle_t wheel_encoder_task;
-    //xTaskCreate(wheelEncoderTask, "WheelEncoderThread", configMINIMAL_STACK_SIZE, NULL, 10, &wheel_encoder_task);
+    // xTaskCreate(wheelEncoderTask, "WheelEncoderThread", configMINIMAL_STACK_SIZE, NULL, 10, &wheel_encoder_task);
 
     // /* Start the tasks and timer running. */
     vTaskStartScheduler();
@@ -360,7 +513,7 @@ int main()
 {
     stdio_init_all();
 
-    //sleep to delay starting
+    // sleep to delay starting
     sleep_ms(5000);
 
     printf("Starting Main \n");
@@ -370,7 +523,9 @@ int main()
 
     // gpio_set_irq_enabled_with_callback(L_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
     // gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
-    gpio_set_irq_enabled_with_callback(ULTRASONIC_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &main_callback);
+    // gpio_set_irq_enabled_with_callback(ULTRASONIC_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &main_callback);
+    gpio_set_irq_enabled_with_callback(LEFT_IR_SENSOR, GPIO_IRQ_EDGE_RISE, true, &main_callback);
+    gpio_set_irq_enabled_with_callback(RIGHT_IR_SENSOR, GPIO_IRQ_EDGE_RISE, true, &main_callback);
 
     printf("Callback set\n");
 
