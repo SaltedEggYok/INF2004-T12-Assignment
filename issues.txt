@@ -11,3 +11,4 @@ WARNINGS
 	need to continue monitoring 
 
 	
+ultrasonic task is suddenly not working, trapped in the while loop in getPulse(), was working before, callback doesnt seem to be called also

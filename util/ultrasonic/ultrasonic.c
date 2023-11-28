@@ -3,104 +3,149 @@
 #include "hardware/timer.h"
 #include "ultrasonic.h"
 
-// const uint trigPin = 0; // GP0
-// const uint echoPin = 1; // GP1
+// used to track for ultrasonic timeout
+volatile absolute_time_t startTime;
+volatile absolute_time_t endTime;
+const int timeout = 26100; // Timeout in microseconds (100ms)
 
-// volatile absolute_time_t startTime;
-// volatile absolute_time_t endTime;
+// echoReceived will be set to true in the callback,
+// on edge fall
+volatile bool echoReceived = false;
 
-// const int timeout = 26100; // Timeout in microseconds (100ms)
-// volatile bool echoReceived = false;
-// volatile bool ultrasonicTimeoutReceived = false;
+// will be linked to main_lib.h
+volatile bool *ultrasonicTimeoutReceived_ptr = false;
+// will be linked to main_lib.h
+volatile float *distanceCM_ptr = NULL;
 
-void setupUltrasonicPins() 
+/*
+    @brief: Initialize the ultrasonic pins
+    @param: None
+    @return: None
+*/
+void setupUltrasonicPins()
 {
     gpio_init(ULTRASONIC_TRIG_PIN);
     gpio_init(ULTRASONIC_ECHO_PIN);
     gpio_set_dir(ULTRASONIC_TRIG_PIN, GPIO_OUT);
     gpio_set_dir(ULTRASONIC_ECHO_PIN, GPIO_IN);
 }
-
-void triggerUltrasonic() {
+/*
+    @brief: trigger the ultrasonic pin every 10ms
+    @param: None
+    @return: None
+*/
+void triggerUltrasonic()
+{
     gpio_put(ULTRASONIC_TRIG_PIN, 1);
     sleep_us(10);
     gpio_put(ULTRASONIC_TRIG_PIN, 0);
 }
 
-float getPulse(volatile bool *echoReceived, absolute_time_t startTime_ultra, absolute_time_t endTime_ultra,int timeout,bool *ultraSonicTimeoutReceived) 
-{    
-    while (! *echoReceived) 
+/*
+    @brief: the callback function for when ultrasonic echo pin rises or falls
+    @param: gpio: GPIO pin which was triggered
+            events: event when GPIO pin was triggered
+    @return: None
+*/
+void ultrasonicCallback(uint gpio, uint32_t events)
+{
+    if (gpio == ULTRASONIC_ECHO_PIN)
     {
-        if (absolute_time_diff_us(startTime_ultra, endTime_ultra) > timeout)
+        // on edge rise, signal sent out
+        if (gpio_get(ULTRASONIC_ECHO_PIN) == 1)
         {
-            *ultraSonicTimeoutReceived = true;
+            startTime = get_absolute_time();
+        }
+        // on edge fall, signal returned
+        else
+        {
+            endTime = get_absolute_time();
+            echoReceived = true;
         }
     }
-
-    return (float)absolute_time_diff_us(startTime_ultra, endTime_ultra);
 }
-
-float getCm(volatile bool *echoReceived, absolute_time_t startTime_ultra, absolute_time_t endTime_ultra,int timeout,bool *ultraSonicTimeoutReceived) 
-{ 
-    *echoReceived = false;
-    triggerUltrasonic();// Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
-    return getPulse(echoReceived,startTime_ultra,endTime_ultra,timeout,ultraSonicTimeoutReceived) / 58.0f; // Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
-}
-
-// void echoHandler(uint gpio, uint32_t events) 
-//  {
-//     if (gpio == ULTRASONIC_ECHO_PIN) {
-//         if (gpio_get(ULTRASONIC_ECHO_PIN) == 1) {
-//             startTime = get_absolute_time();
-//         } else {
-//             endTime = get_absolute_time();
-//             echoReceived = true;
-//         }
-//     }
-// }
-
-// float getPulse() {    
-//     while (!echoReceived) {
-//         if (absolute_time_diff_us(startTime, endTime) > timeout){
-//             ultrasonicTimeoutReceived = true;
-//         }
-//         tight_loop_contents();
-//     }
-
-//     return (float)absolute_time_diff_us(startTime, endTime);
-// }
-
-// float getCm() {
-//     echoReceived = false;
-//     triggerUltrasonic();
-//     return getPulse() / 58.0f; // Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
-// }
-
-void initUltrasonic()
+/*
+    @brief: task for getting the distance and updating it.
+    @param: None used
+    @return: None
+*/
+void ultrasonicTask(__unused void *params)
 {
-    setupUltrasonicPins();
-    //gpio_set_irq_enabled_with_callback(ULTRASONIC_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echoHandler);
+    float fps = 30;
+    float frame_time = 1000 / fps;
+    float dt = frame_time / 1000;
+
+    // this task will poll the ultrasonic a few times every second
+    // and update the distanceCM variable, so the pointer from outside is also updated
+    while (true)
+    {
+        printf("ultrasonic task\n"); // DEBUG
+        if (!*ultrasonicTimeoutReceived_ptr)
+        {
+            // get distance in cm
+            *distanceCM_ptr = getCM();
+            printf("Distance: %.2f (cm)\n", *distanceCM_ptr); // DEBUG
+            echoReceived = false;
+        }
+        else
+        {
+            printf("Ultrasonic read timed out.\n");
+            *ultrasonicTimeoutReceived_ptr = false;
+        }
+        vTaskDelay(frame_time);
+    }
+}
+/*
+    @brief: get the distance in centimetre value
+    @param: None
+    @return: getPulse(echoReceived): success
+*/
+float getCM()
+{
+    echoReceived = false;
+    // Trigger the ultrasonic burst
+    triggerUltrasonic();
+
+    // Speed of sound in air at 20°C is approximately 343 m/s, so 1 cm is roughly 58 microseconds.
+    return getPulse(echoReceived) / 58.0f;
 }
 
-// int main() {
-//   stdio_init_all();
-//   //setupUltrasonicPins();
+/*
+    @brief: get the time between two pulses
+    @param: None
+    @return: absolute_time_diff_us(startTime,endTime)
+*/
+float getPulse()
+{
+    // wait for echo to be received, then return the time difference between the start and end time
+    while (!echoReceived)
+    {
+        printf("waiting for pulse \n"); // DEBUG
+        if (absolute_time_diff_us(startTime, endTime) > timeout)
+        {
+            *ultrasonicTimeoutReceived_ptr = true;
+        }
+        sleep_ms(50);
+    }
 
-//   // Setup echo pin interrupt
-//   //gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &echoHandler);
+    // return the time difference between the start and end time
+    return (float)absolute_time_diff_us(startTime, endTime);
+}
 
-//   while (1) {
-//         float distance_cm = getCm();
+/*
+    @brief: Initialize the ultrasonic pins and all pointers required
+    @param: *ultrasonicTimeoutReceived: pointer to the flag which checks if there is a timeout
+            *distanceCM: pointer to the distance variable
+    @return: None
+*/
+void initUltrasonic(volatile bool *ultrasonicTimeoutReceived, volatile float *distanceCM)
+{
+    // linking pointers
+    ultrasonicTimeoutReceived_ptr = ultrasonicTimeoutReceived;
+    distanceCM_ptr = distanceCM;
 
-//         if (!ultrasonicTimeoutReceived) {
-//             printf("Distance: %.2f (cm)\n", distance_cm);
-//         } else {
-//             printf("Timeout reached.\n");
-//             ultrasonicTimeoutReceived = false;
-//         }
-
-//         sleep_ms(500);
-//   }
-
-//   return 0;
-// }
+    startTime = get_absolute_time();
+    endTime = get_absolute_time();
+    // init pins
+    setupUltrasonicPins();
+}

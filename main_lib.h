@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include "common.h"
+#include "message_buffer.h"
 
 //maybe
 enum MODE{
@@ -26,51 +27,55 @@ enum MOVE_STATE{
 enum MODE currMode;
 enum MOVE_STATE currMoveState;
 
-//for use with sensor.h
-bool leftSensor = false;
-bool rightSensor = false;
+//for use with sensor.h, will link with leftSensePtr and rightSensePtr    
+bool leftSensor = false, rightSensor = false, barcodeSensor = false;
 
 //for use with motor_controller.h
 uint8_t leftSliceNum, rightSliceNum; 
 bool direction = false;
+bool currOrientation = true; //true - curr forward, false - curr backward
 
 //for use with wiif.h
 bool wifiEnabled = false;
 
 //for use with wheel_encoder.h
-volatile int l_triggered = 0;
-volatile int r_triggered = 0;
+// volatile int l_triggered = 0;
+// volatile int r_triggered = 0;
 
-uint64_t r_start_time = 0;
-uint64_t r_prev_time = 0;
+// uint64_t r_start_time = 0;
+// uint64_t r_prev_time = 0;
 
-uint64_t l_start_time = 0;
-uint64_t l_prev_time = 0;
+// uint64_t l_start_time = 0;
+// uint64_t l_prev_time = 0;
 
-volatile float l_speed = 0.0;
-volatile float r_speed = 0.0;
+//linked with l_speed_ptr and r_speed_ptr, in wheel_encoder.h
+// volatile float l_speed = 0.0;
+// volatile float r_speed = 0.0;
 
-static float duty_cycle = 0.8;
-static float updated_duty_cycle = 0.0;
+volatile float duty_cycle = 0.8;
+volatile float updated_duty_cycle = 0.0;
 
 float integral = 0.0;
 float prev_error = 0.0;
 
 
 //for use with ultrasonic.h
-
-//const uint trigPin = 0; // GP0
-//const uint echoPin = 1; // GP1
-
-volatile absolute_time_t startTime_ultra;
-volatile absolute_time_t endTime_ultra;
-
-const int timeout = 26100; // Timeout in microseconds (100ms)
-volatile bool echoReceived = false;
-bool ultrasonicTimeoutReceived = false;
-
+//linked with echoReceived_ptr and ultrasonicTimeoutReceived_ptr
+volatile float ultrasonicDistance = 0.0;
+volatile bool ultrasonicTimeoutReceived = false;
 
 //for use with magnetometer.h
+volatile bool magnetometerTimeoutReceived = false;
+volatile double compassBearing = 0.0;
+
+//for use with pid_controller.h
+volatile float leftSpeed = 0.0;
+volatile float rightSpeed = 0.0;
+//linked with xMsgBuffer_LeftInterrupt_ptr and xMsgBuffer_RightInterrupt_ptr in pid_controller.h
+MessageBufferHandle_t xMsgBuffer_LeftInterrupt;
+MessageBufferHandle_t xMsgBuffer_RightInterrupt;
+
+
 // int16_t bias_x = 0;
 // int16_t bias_y = 0;
 // int16_t bias_z = 0;

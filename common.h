@@ -4,6 +4,7 @@
 #define COMMON_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -13,8 +14,8 @@
 
 //for sensor.h*****************************************
 #define BARCODE_SENSOR 26 //for barcode
-#define LEFT_IR_SENSOR 12 //for left sensor
-#define RIGHT_IR_SENSOR 13 //for right sensor
+#define LEFT_IR_SENSOR 13 //for left sensor
+#define RIGHT_IR_SENSOR 12 //for right sensor
 
 //for motor_controller.h********************************
 #define CLK_CYCLE_NO 12500
@@ -43,8 +44,6 @@
 #define RIGHT_MOTOR 7 //WHITE, ENB
 #define R_REVERSE_PIN 2 //GREY, IN3
 #define R_CLOCKWISE_PIN 3 //BLACK -> PURPLE, IN4 
-
-#define LEFT_CHANNEL PWM_CHAN_A
 
 //GRND WHITE - YELLOW - GREEN
 //VBUS GREEN 
