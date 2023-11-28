@@ -8,10 +8,12 @@
 
 #include "motor_controller.h"
 
-// uint8_t l_slice_num, r_slice_num, reverse_turn;
 
-// Initalize all Motor Controller pins
-//
+/*
+    @brief: Initializes all the gpio pins needed for the left and right wheel
+    @param: None
+    @return: None
+*/
 void initialize_gpio_pins()
 {
     gpio_init(L_REVERSE_PIN);
@@ -24,8 +26,14 @@ void initialize_gpio_pins()
     gpio_set_dir(R_CLOCKWISE_PIN, GPIO_OUT);
 }
 
-// Update pwm parameters to set the speed of a specified motor by modifying the duty cycle
-//
+
+/*
+    @brief: Update pwm parameters to set the speed of a specified motor by modifying the duty cycle
+    @param: slice_num: slice_number of the left or right wheel
+            channel: PWM channel to be updated
+            duty_cycle: value to multiply to obtain the duty cycle
+    @return: None
+*/
 void update_speed(uint8_t slice_num, enum pwm_chan channel, float duty_cycle)
 {
     printf("Updating speed\n");
@@ -33,8 +41,11 @@ void update_speed(uint8_t slice_num, enum pwm_chan channel, float duty_cycle)
     printf("Updated speed\n");
 }
 
-// Retrieves the slice number attached to a specific motor
-//
+/*
+    @brief: Retrieves the slice number attached to a specific motor
+    @param: motor_no: GPIO pin number of motor wanted
+    @return: slice_num: Success
+*/
 uint8_t get_slice_num(int motor_no)
 {
     uint8_t slice_num = pwm_gpio_to_slice_num(motor_no);
@@ -42,8 +53,12 @@ uint8_t get_slice_num(int motor_no)
     return slice_num;
 }
 
-// Starts up the motors with default pwm parameters
-//
+/*
+    @brief: enables the motors to start running at default speed
+    @param: l_slice_num: slice number of left motor
+            r_slice_num: slice number of right motor
+    @return: None
+*/
 void enable_motors(uint8_t l_slice_num, uint8_t r_slice_num)
 {
     // Allocate the gpio pins of the left and right motor to the pwm
@@ -72,8 +87,11 @@ void enable_motors(uint8_t l_slice_num, uint8_t r_slice_num)
     pwm_set_enabled(r_slice_num, true);
 }
 
-// Enables the car to move forward
-//
+/*
+    @brief: enables the motors to move forward
+    @param: None
+    @return: None
+*/
 void move_forward()
 {
     gpio_put(L_CLOCKWISE_PIN, 1);
@@ -81,9 +99,11 @@ void move_forward()
     gpio_put(R_CLOCKWISE_PIN, 1);
     gpio_put(R_REVERSE_PIN, 0);
 }
-
-// Enables the car to reverse
-//
+/*
+    @brief: enables the motors to reverse
+    @param: None
+    @return: None
+*/
 void reverse()
 {
     printf("REVERSING\n");
@@ -93,27 +113,39 @@ void reverse()
     gpio_put(R_REVERSE_PIN, 1);
 }
 
-// Resets the speed back to default
-//
+/*
+    @brief: resets the speed of the motor to default speed
+    @param: l_slice_num: slice number of left motor
+            r_slice_num: slice number of right motor
+    @return: None
+*/
 void reset_speed(uint8_t l_slice_num, uint8_t r_slice_num)
 {
     update_speed(l_slice_num, PWM_CHAN_A, 0.5);
     update_speed(r_slice_num, PWM_CHAN_B, 0.5);
 }
-// Enables the car to stop
-//
+/*
+    @brief: resets the speed of the motor to 0 to stop the motor
+    @param: l_slice_num: slice number of left motor
+            r_slice_num: slice number of right motor
+    @return: None
+*/
 void stop_motors(uint8_t l_slice_num, uint8_t r_slice_num)
 {
     pwm_set_chan_level(l_slice_num, PWM_CHAN_A, 0);
     pwm_set_chan_level(r_slice_num, PWM_CHAN_B, 0);
 }
 
-// Enables the car to make a left turn
-//
+/*
+    @brief: allows the motor to turn left
+    @param: l_slice_num: slice number of left motor
+            r_slice_num: slice number of right motor
+            direction: boolean flag to check if motor does a reverse turn or a forward turn
+    @return: None
+*/
 void turn_left(uint8_t l_slice_num, uint8_t r_slice_num, bool direction)
 {
-    // update_speed(l_slice_num, PWM_CHAN_A, 0);
-    // update_speed(r_slice_num, PWM_CHAN_B, 0.8);
+    // If direction flag is specified, do a normal left turn, else do a reverse left turn
     if (direction)
     {
         gpio_put(L_CLOCKWISE_PIN, 0);
@@ -130,12 +162,16 @@ void turn_left(uint8_t l_slice_num, uint8_t r_slice_num, bool direction)
     }
 }
 
-// Enables the car to make a right turn
-//
+/*
+    @brief: allows the motor to turn right
+    @param: l_slice_num: slice number of left motor
+            r_slice_num: slice number of right motor
+            direction: boolean flag to check if motor does a reverse turn or a forward turn
+    @return: None
+*/
 void turn_right(uint8_t l_slice_num, uint8_t r_slice_num, bool direction)
 {
-    // update_speed(l_slice_num, PWM_CHAN_A, 0.8);
-    // update_speed(r_slice_num, PWM_CHAN_B, 0.3);
+     // If direction flag is specified, do a normal right turn, else do a reverse right turn
     if (direction)
     {
         gpio_put(L_CLOCKWISE_PIN, 1);
@@ -150,36 +186,14 @@ void turn_right(uint8_t l_slice_num, uint8_t r_slice_num, bool direction)
         gpio_put(R_CLOCKWISE_PIN, 1);
         gpio_put(R_REVERSE_PIN, 0);
     }
-    // Checks if a reverse turn is specified, if not specified, forward turn right else, reverse turn right
-    //
-    // if(!reverse_turn)
-    // {
-    //     gpio_put(L_CLOCKWISE_PIN, 1);n
-    //     gpio_put(L_REVERSE_PIN, 0);
-    //     gpio_put(R_CLOCKWISE_PIN, 0);
-    //     gpio_put(R_REVERSE_PIN, 1);
-    // }
-    // else
-    // {
-    //     gpio_put(L_CLOCKWISE_PIN, 1);
-    //     gpio_put(L_REVERSE_PIN, 0);
-    //     gpio_put(R_CLOCKWISE_PIN, 0);
-    //     gpio_put(R_REVERSE_PIN, 1);
-    // }
 }
-
-// NOTE: deprecated due to change to pass by reference
-//  void initMotorController(){
-//      // Initialize all gpio pins
-//      //
-//      initialize_gpio_pins();
-//      // Get the respective pwm slices
-//      //
-//      l_slice_num = get_slice_num(LEFT_MOTOR);
-//      r_slice_num = get_slice_num(RIGHT_MOTOR);
-//      reverse_turn = 0;
-//  }
-
+/*
+    @brief: Initializes the motor controller pins and retrieves the slice numbers
+    @param: *l_slice_num: pointer to the slice number of left motor
+            *r_slice_num: pointer to the slice number of right motor
+            *direction: pointer to the direction boolean flag
+    @return: None
+*/
 void initMotorController(uint8_t *l_slice_num, uint8_t *r_slice_num, bool *direction)
 {
     // Initialize all gpio pins
@@ -193,72 +207,3 @@ void initMotorController(uint8_t *l_slice_num, uint8_t *r_slice_num, bool *direc
 
     enable_motors(*l_slice_num, *r_slice_num);
 }
-
-// int main()
-// {
-//     // Initalize stdio
-//     //
-//     stdio_init_all();
-
-//     // Start up the motors
-//     //
-//     enable_motors(&l_slice_num,&r_slice_num);
-//     // move_forward();
-//     // sleep_ms(15000);
-//     // stop_motors(&l_slice_num,&r_slice_num);
-//     // sleep_ms(5000);
-//     // turn_left(&l_slice_num,&r_slice_num);
-//     // sleep_ms(5000);
-//     // turn_right(&l_slice_num,&r_slice_num);
-//     // sleep_ms(5000);
-//     // reverse();
-//     // sleep_ms(5000);
-//     // stop_motors(&l_slice_num,&r_slice_num);
-//     while(1)
-//     {
-//         char movement = getchar();
-//         switch(movement)
-//         {
-//             case 'f':
-//             {
-//                 reset_speed(&l_slice_num,&r_slice_num);
-//                 move_forward();
-//                 break;
-//             }
-//             case 'l':
-//             {
-//                 reset_speed(&l_slice_num,&r_slice_num);
-//                 reverse_turn = 0;
-//                 turn_left(&l_slice_num,&r_slice_num,reverse_turn);
-//                 break;
-//             }
-//             case 't':
-//             {
-//                 reverse_turn = 0;
-//                 turn_right(&l_slice_num,&r_slice_num,reverse_turn);
-//                 break;
-//             }
-//             case 's':
-//             {
-//                 stop_motors(&l_slice_num,&r_slice_num);
-//                 break;
-//             }
-//             case 'r':
-//                 update_speed(&l_slice_num,PWM_CHAN_A,0.5);
-//                 update_speed(&r_slice_num,PWM_CHAN_B,0.5);
-//                 reverse();
-//                 break;
-//             case 'e':
-//                 reverse_turn = 1;
-//                 turn_left(&r_slice_num,&l_slice_num,reverse_turn);
-//                 break;
-//             case 'j':
-//                 reverse_turn = 1;
-//                 turn_right(&r_slice_num,&l_slice_num,reverse_turn);
-//                 break;
-//             default:
-//                 reset_speed(&l_slice_num,&r_slice_num);
-//                 stop_motors(&l_slice_num,&r_slice_num);
-//         }
-//     }
-// }

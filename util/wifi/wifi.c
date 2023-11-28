@@ -16,6 +16,11 @@
 int attempts = 0;
 bool connected = false;
 
+/*
+    @brief: initialize the TCP server
+    @param: None
+    @return: state:success
+*/
 static TCP_SERVER_T* tcp_server_init(void) {
     TCP_SERVER_T *state = calloc(1, sizeof(TCP_SERVER_T));
     if (!state) {
@@ -25,6 +30,11 @@ static TCP_SERVER_T* tcp_server_init(void) {
     return state;
 }
 
+/*
+    @brief: Close the TCP server
+    @param: arg
+    @return: err:success
+*/
 static err_t tcp_server_close(void *arg) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     err_t err = ERR_OK;
@@ -50,6 +60,12 @@ static err_t tcp_server_close(void *arg) {
     return err;
 }
 
+/*
+    @brief: get the result of the TCP server
+    @param: *arg: pointer to the arg variable
+            status: status of the server
+    @return: ERR_OK:success
+*/
 static err_t tcp_server_result(void *arg, int status) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     if (status == 0) {
@@ -62,6 +78,13 @@ static err_t tcp_server_result(void *arg, int status) {
     return ERR_OK;
 }
 
+/*
+    @brief: check if message sent from tcp server
+    @param: *arg: pointer to the arg variable
+            *tpcb: pointer to the tpcb variable
+             len: length of the buffer 
+    @return: ERR_OK:success
+*/
 static err_t tcp_server_sent(void *arg, struct tcp_pcb *tpcb, u16_t len) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     DEBUG_printf("tcp_server_sent %u\n", len);
@@ -77,6 +100,12 @@ static err_t tcp_server_sent(void *arg, struct tcp_pcb *tpcb, u16_t len) {
     return ERR_OK;
 }
 
+/*
+    @brief: send a message from the tcp server
+    @param: *arg: pointer to the arg variable
+            *tpcb: pointer to the tpcb variable
+    @return: ERR_OK:success
+*/
 err_t tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
 {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
@@ -99,6 +128,14 @@ err_t tcp_server_send_data(void *arg, struct tcp_pcb *tpcb)
     return ERR_OK;
 }
 
+/*
+    @brief: tcp server receives a message
+    @param: *arg: pointer to the arg variable
+            *tpcb: pointer to the tpcb variable
+             err: status code of the error
+    @return: tcp_server_result(arg,-1) : error
+             ERR_OK : success
+*/
 err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     if (!p) {
@@ -143,11 +180,24 @@ err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err
     return ERR_OK;
 }
 
+/*
+    @brief: poll to check the tcp server
+    @param: *arg: pointer to the arg variable
+            *tpcb: pointer to the tpcb variable
+    @return: tcp_server_result(arg,-1) : error
+             
+*/
 static err_t tcp_server_poll(void *arg, struct tcp_pcb *tpcb) {
     //DEBUG_printf("tcp_server_poll_fn\n");
     return tcp_server_result(arg, -1); // no response is an error?
 }
 
+/*
+    @brief: check the tcp server's error
+    @param: *arg: pointer to the arg variable
+            err: status code of the error
+    @return: None     
+*/
 static void tcp_server_err(void *arg, err_t err) {
     if (err != ERR_ABRT) {
         DEBUG_printf("tcp_client_err_fn %d\n", err);
@@ -155,6 +205,13 @@ static void tcp_server_err(void *arg, err_t err) {
     }
 }
 
+/*
+    @brief: accept the tcp server's connection
+    @param: *arg: pointer to the arg variable
+            *client_pcb: pointer to the client_pcb variable
+            err: status code of the error
+    @return: None     
+*/
 static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     if (err != ERR_OK || client_pcb == NULL) {
@@ -174,6 +231,11 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
     return tcp_server_send_data(arg, state->client_pcb);
 }
 
+/*
+    @brief: open the tcp server
+    @param: *arg: pointer to the arg variable
+    @return: None     
+*/
 static bool tcp_server_open(void *arg) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     DEBUG_printf("Starting server at %s on port %u\n", ip4addr_ntoa(netif_ip4_addr(netif_list)), TCP_PORT);
@@ -205,6 +267,11 @@ static bool tcp_server_open(void *arg) {
     return true;
 }
 
+/*
+    @brief: test the tcp server
+    @param: None
+    @return: None     
+*/
 void run_tcp_server_test(void) {
     TCP_SERVER_T *state = tcp_server_init();
     if (!state) {
@@ -234,6 +301,12 @@ void run_tcp_server_test(void) {
     free(state);
 }
 
+/*
+    @brief: attempt to conenct to the tcp server
+    @param: None
+    @return: 0: success 
+             1: error     
+*/
 int attemptConnection(){
     printf("Connecting to Wi-Fi...\n");
     do {
@@ -259,7 +332,11 @@ int attemptConnection(){
     return 0;
 }
 
-// changes the state of a boolean passed in, main.h will use to to allow or disallow wifi
+/*
+    @brief: changes the state of a boolean passed in, main.h will use to to allow or disallow wifi 
+    @param: *wifiEnabled: pointer to the flag which checks if wifi is enabled
+    @return: None     
+*/
 void initWifi(bool *wifiEnabled){
 
     if (cyw43_arch_init()) {
@@ -280,21 +357,3 @@ void initWifi(bool *wifiEnabled){
     *wifiEnabled = true;
     return;
 }
-
-// int main() {
-//     stdio_init_all();
-
-//     if (cyw43_arch_init()) {
-//         printf("failed to initialise\n");
-//         return 1;
-//     }
-
-//     cyw43_arch_enable_sta_mode();
-
-//     //sleep_ms(5000);
-
-
-//     //run_tcp_server_test();
-//     cyw43_arch_deinit();
-//     return 0;
-// }

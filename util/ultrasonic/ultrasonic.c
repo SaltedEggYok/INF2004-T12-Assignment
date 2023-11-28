@@ -17,6 +17,11 @@ volatile bool *ultrasonicTimeoutReceived_ptr = false;
 // will be linked to main_lib.h
 volatile float *distanceCM_ptr = NULL;
 
+/*
+    @brief: Initialize the ultrasonic pins
+    @param: None
+    @return: None
+*/
 void setupUltrasonicPins()
 {
     gpio_init(ULTRASONIC_TRIG_PIN);
@@ -24,7 +29,11 @@ void setupUltrasonicPins()
     gpio_set_dir(ULTRASONIC_TRIG_PIN, GPIO_OUT);
     gpio_set_dir(ULTRASONIC_ECHO_PIN, GPIO_IN);
 }
-
+/*
+    @brief: trigger the ultrasonic pin every 10ms
+    @param: None
+    @return: None
+*/
 void triggerUltrasonic()
 {
     gpio_put(ULTRASONIC_TRIG_PIN, 1);
@@ -32,7 +41,12 @@ void triggerUltrasonic()
     gpio_put(ULTRASONIC_TRIG_PIN, 0);
 }
 
-// the callback function for when ultrasonic echo pin rises or falls
+/*
+    @brief: the callback function for when ultrasonic echo pin rises or falls
+    @param: gpio: GPIO pin which was triggered
+            events: event when GPIO pin was triggered
+    @return: None
+*/
 void ultrasonicCallback(uint gpio, uint32_t events)
 {
     if (gpio == ULTRASONIC_ECHO_PIN)
@@ -50,8 +64,11 @@ void ultrasonicCallback(uint gpio, uint32_t events)
         }
     }
 }
-
-// task specifically assigned to ultrasonic
+/*
+    @brief: task for getting the distance and updating it.
+    @param: None used
+    @return: None
+*/
 void ultrasonicTask(__unused void *params)
 {
     float fps = 30;
@@ -78,7 +95,11 @@ void ultrasonicTask(__unused void *params)
         vTaskDelay(frame_time);
     }
 }
-
+/*
+    @brief: get the distance in centimetre value
+    @param: None
+    @return: getPulse(echoReceived): success
+*/
 float getCM()
 {
     echoReceived = false;
@@ -89,6 +110,11 @@ float getCM()
     return getPulse(echoReceived) / 58.0f;
 }
 
+/*
+    @brief: get the time between two pulses
+    @param: None
+    @return: absolute_time_diff_us(startTime,endTime)
+*/
 float getPulse()
 {
     // wait for echo to be received, then return the time difference between the start and end time
@@ -106,7 +132,12 @@ float getPulse()
     return (float)absolute_time_diff_us(startTime, endTime);
 }
 
-// init function for ultrasonic
+/*
+    @brief: Initialize the ultrasonic pins and all pointers required
+    @param: *ultrasonicTimeoutReceived: pointer to the flag which checks if there is a timeout
+            *distanceCM: pointer to the distance variable
+    @return: None
+*/
 void initUltrasonic(volatile bool *ultrasonicTimeoutReceived, volatile float *distanceCM)
 {
     // linking pointers
@@ -118,26 +149,3 @@ void initUltrasonic(volatile bool *ultrasonicTimeoutReceived, volatile float *di
     // init pins
     setupUltrasonicPins();
 }
-
-// int main() {
-//   stdio_init_all();
-//   //setupUltrasonicPins();
-
-//   // Setup echo pin interrupt
-//   //gpio_set_irq_enabled_with_callback(echoPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &ultrasonicCallback);
-
-//   while (1) {
-//         float distance_cm = getCm();
-
-//         if (!ultrasonicTimeoutReceived) {
-//             printf("Distance: %.2f (cm)\n", distance_cm);
-//         } else {
-//             printf("Timeout reached.\n");
-//             ultrasonicTimeoutReceived = false;
-//         }
-
-//         sleep_ms(500);
-//   }
-
-//   return 0;
-// }

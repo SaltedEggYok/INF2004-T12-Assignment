@@ -81,7 +81,13 @@ const int reverseLetterZ[9] = {0, 0, 0, 0, 1, 0, 0, 1, 1};
 
 bool *leftSensePtr = NULL, *rightSensePtr = NULL, *barcodePtr = NULL;
 
-/** Function to compare two integer arrays to see if it matches any character*/
+/*
+    @brief: Function to compare two integer arrays to see if it matches any character*
+    @param: a[]: integer array a
+            b[]: integer array b
+    @return: 0: Array is equal 
+             1: Array is not equal
+*/
 int matchArray(int a[], const int b[])
 {
     int i;
@@ -93,6 +99,13 @@ int matchArray(int a[], const int b[])
     return 0; // If array equal, return 0
 }
 
+/*
+    @brief: Initialize all sensor pins and required pointers
+    @param: *leftSensor: pointer to the GPIO pin of the left sensor
+            *rightSensor: pointer to the GPIO pin of the right sensor
+            *barcodeSensor: pointer to the GPIO pin of the barcode sensor
+    @return: None
+*/
 void initSensor(bool *leftSensor, bool *rightSensor, bool * barcodeSensor)
 {
     printf("[Encoder] Init start \n");
@@ -122,7 +135,11 @@ void initSensor(bool *leftSensor, bool *rightSensor, bool * barcodeSensor)
     printf("[Encoder] Init done \n");
 }
 
-/* Checks if the barcode sensor is ready to start scanning if not start */
+/*
+    @brief: retrieves flag to determine if the barcode is ready to scan
+    @param: None
+    @return: 0: success
+*/
 int startScanningBarcode()
 {
     if (gpio_get(BARCODE_SENSOR) == 0)
@@ -135,7 +152,11 @@ int startScanningBarcode()
     return 0;
 }
 
-/* Scans the barcode, tracking time between transitions (black to white or white to black) */
+/*
+    @brief: Scans the barcode, tracking time between transitions (black to white or white to black)
+    @param: None
+    @return: None
+*/
 void scanning()
 {
     static uint32_t lastDetectionTime = 0;
@@ -164,7 +185,12 @@ void scanning()
     }
 }
 
-/* Determines if the barcode scan is complete based on asterisk detection */
+/*
+    @brief: Determines if the barcode scan is complete based on asterisk detection
+    @param: None
+    @return: true: True
+             false: False
+*/
 bool isBarcodeComplete()
 {
     if (countAsterisk >= 2)
@@ -176,7 +202,12 @@ bool isBarcodeComplete()
         return false;
 }
 
-/** Processes the finalString to return the decoded character */
+/*
+    @brief:  Processes the finalString to return the decoded character
+    @param: None
+    @return: finalString: Success
+             tempString: tempString
+*/
 const char *returnChar()
 {
     int tempCount = 0;
@@ -209,7 +240,11 @@ const char *returnChar()
     return finalString;
 }
 
-/* Resets variables to prepare for a new barcode scanning */
+/*
+    @brief: Resets variables to prepare for a new barcode scanning
+    @param: None
+    @return: None
+*/
 void resetForNewString()
 {
     countAsterisk = 0;                 // Reset count asterisk
@@ -220,7 +255,11 @@ void resetForNewString()
     startScanningBarcodeState = false; // Exit barcode state
 }
 
-/* Decodes the thick and thin bars into characters by comparing the timing array to predefined patterns */
+/*
+    @brief: Decodes the thick and thin bars into characters by comparing the timing array to predefined patterns
+    @param: None
+    @return: None
+*/
 void decodeChar()
 {
     // Define a mapping of patterns to their respective characters
@@ -264,13 +303,22 @@ void decodeChar()
  
 }
 
-/* Determines if one character worth of bars/spaces has been read */
+/*
+    @brief: Determines if one character worth of bars/spaces has been read
+    @param: None
+    @return: 1: True, 0: False
+*/
 bool oneCharRead()
 {
     return (arrayVar == 10);
 }
 
-/* Processes the timings to identify thick and thin bars and decode the character */
+
+/*
+    @brief: Processes the timings to identify thick and thin bars and decode the character 
+    @param: None
+    @return: 1: True, 0: False
+*/
 void decodeThickThinBar()
 {
     // Check if a complete pattern has been read. If not, exit the function early.
@@ -278,7 +326,6 @@ void decodeThickThinBar()
     {
         return;
     }
-
     // Calculate the time differences between transitions and store them in the timeChanges array.
     for (int i = 0; i < 9; i++)
     {
@@ -409,43 +456,33 @@ void decodeThickThinBar()
     patternComplete = false;
 }
 
-/** Retrieve the current state of the left IR sensor */
+
+/*
+    @brief: Retrieve the current state of the left IR sensor
+    @param: *leftSensor: pointer to the gpio pin of the left IR sensor
+    @return: None
+*/
 void getLeftSensor(bool *leftSensor)
 {
     *leftSensor = gpio_get(LEFT_IR_SENSOR);
 }
 
-/** Retrieve the current state of the right IR sensor */
+/*
+    @brief: Retrieve the current state of the right IR sensor
+    @param: *rightSensor: pointer to the gpio pin of the right IR sensor
+    @return: None
+*/
 void getRightSensor(bool *rightSensor)
 {
     *rightSensor = gpio_get(RIGHT_IR_SENSOR);
 }
 
-// int main() {
-//     stdio_init_all(); // Initialize standard I/O
-//     //initSensor(); // Initialize infrared sensor
 
-//     while (true) {
-//         tight_loop_contents(); // Function to keep CPU active
-
-//         if (startScanningBarcode()) { // Check if ready to start barcode scanning
-//             while (!isBarcodeComplete()) { // Keep scanning until a character is ready to return
-//                 scanning(); // Perform scanning operation
-
-//                 if (oneCharRead()) { // Check if one character is read
-//                     decodeThickThinBar(); // Process the timings to decode the character
-//                 }
-//             }
-
-//             const char* decodedString = returnChar(); // Get the decoded barcode string
-//             printf("Decoded Barcode: %s\n", decodedString); // Print or handle the decoded string
-
-//             resetForNewString();
-//         }
-//     }
-//     return 0;
-// }
-
+/*
+    @brief: Creates the sensor task 
+    @param: None
+    @return: None
+*/
 void sensorTask(__unused void *params)
 {
     float fps = 30;
@@ -460,7 +497,11 @@ void sensorTask(__unused void *params)
         vTaskDelay(frame_time);
     }
 }
-
+/*
+    @brief: Creates the barcode Task
+    @param: None
+    @return: None
+*/
 void barcodeTask(__unused void *params)
 {
     float fps = 30;

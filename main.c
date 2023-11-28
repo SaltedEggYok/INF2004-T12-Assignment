@@ -22,80 +22,45 @@
 #include "util/wheel_encoder/wheel_encoder.h"
 #include "util/pid_controller/pid_controller.h"
 
+/*
+    @brief: the callback function when a timer is created
+    @param: *t: pointer to the repeating_timer struct
+    @return: None
+*/
 bool repeating_timer_callback(struct repeating_timer *t)
 {
     printf("Repeat at %lld\n", time_us_64() / 1000000);
     return true;
 }
+/*
+    @brief:  the main ISR handler which detects which pin is triggered and calls the respective callback function
+    @param: gpio: gpio pin which was triggered
+            events: event for the gpio which was triggered
+    @return: None
+*/
 
 void main_callback(unsigned int gpio, long unsigned int events)
 {
-    // printf("Callback\n");
-    // printf("Callback GPIO: %d\n", gpio);
     // Left Wheel Encoder
     //
     if (gpio == L_WHEEL_ENCODER)
     {
         wheel_callback(gpio, events);
-        // // get_dst(l_start_time,l_prev_time,l_triggered);
-        // l_triggered += 1;
-        // printf("Left Wheel Encoder Triggered: %d\n", l_triggered);
-        // // Once a previous timing exists
-        // //
-        // if (l_prev_time)
-        // {
-        //     l_start_time = time_us_64();
-        //     l_speed = get_dst(l_start_time, l_prev_time, l_triggered);
-        //     printf("Left Wheel Speed: %.2f/s\n", l_speed);
-        // }
-        // l_prev_time = time_us_64();
     }
     // Right Wheel Encoder
     //
     else if (gpio == R_WHEEL_ENCODER)
     {
         wheel_callback(gpio, events);
-        // r_triggered += 1;
-
-        // // Once a previous timing exists
-        // //
-        // if (r_prev_time)
-        // {
-        //     r_start_time = time_us_64();
-        //     r_speed = get_dst(r_start_time, r_prev_time, r_triggered);
-        //     printf("Right Wheel Speed: %.2f/s\n", r_speed);
-        // }
-        // r_prev_time = time_us_64();
     }
     // UltraSonic Sensor
     //
-    else if (gpio == 1)
-    {
-        // do nothing
-    }
-    // IR sensor 1
-    //
-    else if (gpio == 26)
-    {
-        // do nothing
-    }
     else if (gpio == ULTRASONIC_ECHO_PIN)
     {
         ultrasonicCallback(gpio, events);
-        // if (gpio_get(ULTRASONIC_ECHO_PIN) == 1)
-        // {
-        //     startTime_ultra = get_absolute_time();
-        // }
-        // else
-        // {
-        //     endTime_ultra = get_absolute_time();
-        //     echoReceived = true;
-        // }
     }
     else if (gpio == LEFT_IR_SENSOR)
     {
-        //        struct repeating_timer timer;
-
         absolute_time_t start_time;
         // if (leftSensor == 1 && rightSensor == 1)
         if (rightSensor == 1)
@@ -237,6 +202,12 @@ void main_callback(unsigned int gpio, long unsigned int events)
     }
 }
 
+/*
+    @brief:  inititalize all required sensors and 
+             hardware components along with all pointers which will be used for retrieval
+    @param: None
+    @return: None
+*/
 // init everything
 void initAll()
 {
@@ -264,6 +235,11 @@ void traverseMap()
     // do DFS to traverse map, prioritise going left (read current magnetometer)
 }
 
+/*
+    @brief: defines the default behavior of the car
+    @param: None
+    @return: None
+*/
 void defaultBehaviour()
 {
     // default behaviour
@@ -303,8 +279,12 @@ void defaultBehaviour()
     }
 }
 
-// behaviour update, all logic that will affect the
-// behaviour of the car will be here
+
+/*
+    @brief: stores all logic that will affect the behavior of the car and updates it
+    @param: None
+    @return: None
+*/
 void updateBehaviour()
 {
     switch (currMode)
@@ -317,16 +297,17 @@ void updateBehaviour()
         break;
     case PERFORMING_TASK:
         defaultBehaviour(); // DEBUG LINE
-
-        // do nothing?? .. for now??
         break;
     default:
         break;
     }
 }
 
-// movement update, purely to call the move functions
-// and update any variables that will BE AFFECTED the movement - not AFFECTING
+/*
+    @brief: movement update, purely to call the move functions and update any variables that are affected by movement
+    @param: None
+    @return: None
+*/
 void updateMovement()
 {
     switch (currMoveState)
@@ -335,13 +316,6 @@ void updateMovement()
         break;
     case FORWARD:
         move_forward();
-        // sleep_ms(5000);
-        // turn_left(&leftSliceNum, &rightSliceNum, direction);
-        // sleep_ms(5000);
-        // turn_right(&leftSliceNum, &rightSliceNum, direction);
-        // sleep_ms(5000);
-        // reverse();
-        // sleep_ms(5000);
         break;
     case BACKWARD:
         reverse();
@@ -356,7 +330,11 @@ void updateMovement()
         break;
     }
 }
-
+/*
+    @brief: Creates the main task
+    @param: None
+    @return: None
+*/
 void mainTask(__unused void *params)
 {
     if (cyw43_arch_init())
@@ -378,20 +356,15 @@ void mainTask(__unused void *params)
 
     while (true)
     {
-        // if(leftSensor != NULL && rightSensor != NULL)
-        //{
-        // printf("Left Sensor Main: %d, Right Sensor Main: %d\n", leftSensor, rightSensor);
-        //}
-
-        // if (leftSensor == false && rightSensor == false)
-        // {
-        //     move_forward();
-        // }
-
         vTaskDelay(frame_time);
     }
 }
 
+/*
+    @brief: Creates the detection of obstacle task
+    @param: None
+    @return: None
+*/
 void obstacleTask(__unused void *params)
 {
 
@@ -428,7 +401,12 @@ void obstacleTask(__unused void *params)
         vTaskDelay(frame_time);
     }
 }
-
+/*
+    @brief: Initialize the ultrasonic pins and all pointers required
+    @param: *ultrasonicTimeoutReceived: pointer to the flag which checks if there is a timeout
+            *distanceCM: pointer to the distance variable
+    @return: None
+*/
 void pidTask(__unused void *params)
 {
 
@@ -477,7 +455,11 @@ void pidTask(__unused void *params)
     }
 }
 
-// task launching function
+/*
+    @brief: handles the creation adn starting of all tasks
+    @param: None
+    @return: None
+*/
 void vLaunch(void)
 {
 
@@ -502,13 +484,15 @@ void vLaunch(void)
     TaskHandle_t pid_task;
     // xTaskCreate(pidTask, "PIDThread", configMINIMAL_STACK_SIZE, NULL, 15, &pid_task);
 
-    TaskHandle_t wheel_encoder_task;
-    // xTaskCreate(wheelEncoderTask, "WheelEncoderThread", configMINIMAL_STACK_SIZE, NULL, 10, &wheel_encoder_task);
-
     // /* Start the tasks and timer running. */
     vTaskStartScheduler();
 }
 
+/*
+    @brief: The main loop of the program
+    @param: None
+    @return: 0 : success
+*/
 int main()
 {
     stdio_init_all();
@@ -530,145 +514,4 @@ int main()
     printf("Callback set\n");
 
     vLaunch();
-
-    // while(true)
-    // {
-    //     updated_duty_cycle = compute_pid(r_speed, l_speed, &integral, &prev_error);
-    //     // updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
-    //     // when intergral becomes negative, means left wheel too fast, reduce,
-    //     // however it is reducing too fast? and then the wheel stops so
-    //     // need to find a way to reduce the speed slowly?
-    //     // but if the wheel ever stops, then speed doesnt update since callback not called
-    //     // so need to find a way to update speed even if callback not called?
-    //     // also when the wheel is turning backwards speed isnt directly negative?
-    //     printf("Modifier: %f\n", updated_duty_cycle);
-    //     duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; // update duty cycle reduce magnitude?
-    //     duty_cycle = MAX(duty_cycle, 0.3f);              // MINUMUM DUTY CYCLE
-    //     duty_cycle = MIN(duty_cycle, 0.8f);              // MAXIMUM DUTY CYCLE
-    //     printf("Modified Duty Cycle : %f\n", duty_cycle);
-    //     update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
-    // }
-
-    // }
-    // sleep_ms(5000);
-    // printf("Starting...\n");
-
-    // // gpio_set_dir(BTN_PIN, GPIO_IN);
-    // // gpio_set_pulls(BTN_PIN, true, false);
-
-    // // if (cyw43_arch_init()) {
-    // //     printf("Wi-Fi init failed.");
-    // //     return -1;
-    // // }
-    // // init everything
-    // initAll();
-
-    // sleep_ms(2000);
-    // printf("Init Passed...\n");
-
-    // xTaskCreate(vTemperatureTask,"Temp_Task",configMINIMAL_STACK_SIZE,NULL,8,NULL);
-    // xTaskCreate(vMovingTask,"Moving_Task",configMINIMAL_STACK_SIZE,NULL,7,NULL);
-    // gpio_set_irq_enabled_with_callback(L_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
-    // gpio_set_irq_enabled_with_callback(R_WHEEL_ENCODER, GPIO_IRQ_EDGE_RISE, true, &main_callback);
-    // gpio_set_irq_enabled_with_callback(ULTRASONIC_ECHO_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &main_callback);
-    // gpio_set_irq_enabled_with_callback(LEFT_IR_SENSOR,GPIO_IRQ_EDGE_RISE,false,&main_callback);
-    // gpio_set_irq_enabled_with_callback(RIGHT_IR_SENSOR,GPIO_IRQ_EDGE_RISE,false,&main_callback);
-    // gpio_set_irq_enabled_with_callback(BARCODE_SENSOR,GPIO_IRQ_EDGE_RISE,false,&main_callback);
-
-    // vTaskStartScheduler();
-
-    // absolute_time_t frame_start;
-    // absolute_time_t frame_end;
-    // uint16_t frame_duration;
-    // float fps = 10;
-    // float frame_time = 1000 / fps;
-    // float dt = frame_time / 1000;
-    // printf("Frame Time: %f\n", frame_time);
-
-    // //short sleep
-    // sleep_ms(100);
-
-    // while (true)
-    // {
-    //     frame_start = get_absolute_time();
-
-    //     printf("Left Sensor Main : %d\n", leftSensor);
-    //     printf("Right Sensor Main : %d\n", rightSensor);
-
-    //     // // Correct Left Wheel Speed to Right Wheel
-    //     // //
-    //     // printf("L_speed : %f\n",l_speed);
-    //     // printf("R_speed: %f\n",r_speed);
-    //     // updated_duty_cycle = compute_pid(r_speed *dt, l_speed *dt, &integral, &prev_error);
-
-    //     // //updated_duty_cycle = compute_pid(l_speed *dt, r_speed *dt, &integral, &prev_error);
-    //     // //when intergral becomes negative, means left wheel too fast, reduce,
-    //     // //however it is reducing too fast? and then the wheel stops so
-    //     // //need to find a way to reduce the speed slowly?
-    //     // //but if the wheel ever stops, then speed doesnt update since callback not called
-    //     // //so need to find a way to update speed even if callback not called?
-    //     // //also when the wheel is turning backwards speed isnt directly negative?
-    //     // printf("Modifier: %f\n", updated_duty_cycle);
-    //     // duty_cycle += updated_duty_cycle / CLK_CYCLE_NO; //update duty cycle reduce magnitude?
-    //     // duty_cycle = MAX(duty_cycle, 0.3f); //MINUMUM DUTY CYCLE
-    //     // duty_cycle = MIN(duty_cycle, 0.8f); //MAXIMUM DUTY CYCLE
-    //     // printf("Modified Duty Cycle : %f\n", duty_cycle);
-    //     // update_speed(leftSliceNum, PWM_CHAN_A, duty_cycle);
-
-    //     //update_speed(rightSliceNum, PWM_CHAN_B, duty_cycle);
-    //     // printf("curr Move State: %d\n", currMoveState);
-    //     // printf("curr Mode: %d\n", currMode);
-
-    //     // updateBehaviour();
-    //     // updateMovement();
-
-    //     // double distance_cm = getCm(&echoReceived,startTime_ultra,endTime_ultra,timeout,&ultrasonicTimeoutReceived);
-
-    //     // if (!ultrasonicTimeoutReceived) {
-    //     //     printf("Distance from nearest object: %.2f (cm)\n", distance_cm);
-    //     // } else {
-    //     //     printf("Timeout reached.\n");
-    //     //     ultrasonicTimeoutReceived = false;
-    //     // }
-    //     // int16_t x_acc, y_acc, z_acc;
-    //     // int16_t x_mag, y_mag, z_mag;
-
-    //     // bool magTimeout;
-    //     // getMagnetometerTimeout(&magTimeout);
-
-    //     // if (!magTimeout)
-    //     // {
-    //     //     readAccelerometerData(&x_acc, &y_acc, &z_acc);
-    //     //     readMagnetometerData(&x_mag, &y_mag, &z_mag);
-    //     //     // convertMagDataToUT(&x_mag, &y_mag, &z_mag);
-    //     //     calculateAcceleration(x_acc, y_acc, z_acc);
-    //     //     // printf("Accelerometer Data: (X = %d, Y = %d, Z = %d)\n", x_acc, y_acc, z_acc);
-    //     //     // printf("Magnetometer Data: (X = %d, Y = %d, Z = %d)\n", x_mag, y_mag, z_mag);
-
-    //     //     double compass_bearing = getCompassBearing(x_mag, y_mag);
-    //     //     // printf("Compass Bearing: %.2f degrees\n", compass_bearing);
-    //     // }
-    //     // else
-    //     // {
-    //     //     // printf("Magnetometer read timed out.\n");
-    //     //     // magnetometerTimeoutReceived = false;
-    //     //     setMagnetometerTimeout(false);
-    //     // }
-
-    //     // if(gpio_get(BTN_PIN))
-    //     // {
-    //     //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-    //     //     sleep_ms(250);
-    //     //     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-    //     //     sleep_ms(250);
-    //     // }
-
-    //     // getting fps
-    //     frame_end = get_absolute_time();
-    //     frame_duration = absolute_time_diff_us(frame_start, frame_end);
-    //     printf("Sleep Duration: %f\n", frame_time - frame_duration / 1000); //DEBUG
-    //     sleep_ms(frame_time - frame_duration / 1000);
-
-    //     // sleep_ms(1000/60); // 60 fps
-    // }
 }
