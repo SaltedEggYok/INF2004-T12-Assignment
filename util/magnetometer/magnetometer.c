@@ -39,9 +39,10 @@ void writeRegister(uint8_t address, uint8_t reg, uint8_t value)
 }
 
 /*
-    @brief: read value from the address 
-    @param: None
-    @return: 0: Success
+    @brief: Read a register value from a specified I2C address
+    @param: address - The I2C address of the device
+            reg - The register address to read
+    @return: The data read from the specified register
 */
 uint8_t readRegister(uint8_t address, uint8_t reg)
 {
@@ -64,7 +65,7 @@ void configureAccelerometer()
 
 
 /*
-    @brief: read data from the accelerometer
+    @brief: Read data from the accelerometer
     @param: *x: pointer to the x value
             *y: pointer to the y value
             *z: pointer to the z value
@@ -88,7 +89,7 @@ void configureMagnetometer()
 }
 
 /*
-    @brief: read data from the magnetometer
+    @brief: Reads data from the magnetometer
     @param: *x: pointer to the x value
             *y: pointer to the y value
             *z: pointer to the z value
@@ -110,7 +111,7 @@ void readMagnetometerData(int16_t *x, int16_t *y, int16_t *z)
 }
 
 /*
-    @brief: Calibrates the accelerometer
+    @brief: Calibrates the accelerometer with bias offsets
     @param: None
     @return: None
 */
@@ -151,10 +152,10 @@ void calculateAcceleration(int16_t x, int16_t y, int16_t z)
 }
 
 /*
-    @brief: get the angle relative to the magnetic morth
-    @param: x: x value of the car
-            y: y value of the car
-    @return: angle * 180 / M_PI: success
+    @brief: Calculate the angle relative to the magnetic north based on x and y values.
+    @param: x: x-coordinate of the car
+            y: y-coordinate of the car
+    @return: The calculated angle in degrees (0 to 360) relative to the magnetic north
 */
 double getCompassBearing(int16_t x, int16_t y)
 {
@@ -168,7 +169,7 @@ double getCompassBearing(int16_t x, int16_t y)
 
 /*
     @brief: Initialize the magnetometer and the respective pointers
-    @param: *magnetometerTimeoutReceived: pointer to the flag that checks if the magnetometer timeouted
+    @param: *magnetometerTimeoutReceived: pointer to the flag that checks if the magnetometer timeouts
             *compassBearing: pointer to the value of the compassBearing
     @return: None
 */
